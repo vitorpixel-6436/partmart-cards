@@ -1,114 +1,142 @@
-from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
-import os
-from django.conf import settings
-from .card_generator import CardGenerator
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
+from .base_generator import BaseCardGenerator
 
 
-class SpotifyStyleGenerator:
+class SpotifyStyleGenerator(BaseCardGenerator):
     """
-    🎵 Spotify Minimal Style Generator
-    Ультра-чистый минималистичный дизайн
+    🎵 Spotify Minimal Style - ультра-чистый дизайн
     """
     
-    # Цветовая палитра Spotify
-    COLOR_BLACK = (18, 18, 18)
-    COLOR_GREEN = (30, 215, 96)
-    COLOR_WHITE = (255, 255, 255)
-    COLOR_GRAY = (179, 179, 179)
-    
-    def __init__(self, pc_build):
-        self.pc_build = pc_build
-        self.canvas_size = (1200, 1200)
+    # Spotify цветовая палитра
+    SPOTIFY_BLACK = (18, 18, 18)
+    SPOTIFY_GREEN = (29, 185, 84)
+    SPOTIFY_WHITE = (255, 255, 255)
+    SPOTIFY_GRAY = (179, 179, 179)
+    SPOTIFY_DARK_GRAY = (40, 40, 40)
     
     def generate(self):
         """
-        Генерирует карточку в Spotify стиле
+        Генерирует карточку в стиле Spotify Minimal
         """
-        # Черный фон
-        img = Image.new('RGB', self.canvas_size, color=self.COLOR_BLACK)
-        draw = ImageDraw.Draw(img)
+        # Чистый чёрный фон
+        card = Image.new('RGB', self.CARD_SIZE, self.SPOTIFY_BLACK)
         
-        # Фото
-        pc_photo = Image.open(self.pc_build.photo.path)
-        pc_photo = self._prepare_photo(pc_photo)
+        # Загружаем фото ПК
+        photo = self.load_and_prepare_photo((1000, 750))
         
-        # Квадратное фото сверху
-        img.paste(pc_photo, (100, 100))
+        # Увеличиваем контраст фото для драматичности
+        enhancer = ImageEnhance.Contrast(photo)
+        photo = enhancer.enhance(1.2)
         
-        # Лого
-        self._add_logo(draw)
+        # Размещаем фото по центру верхней части
+        x_offset = (self.width - photo.width) // 2
+        y_offset = 60
         
-        # Характеристики - минимум элементов
-        self._add_specs(draw)
+        card.paste(photo, (x_offset, y_offset))
         
-        # Цена - очень крупно
-        self._add_price(draw)
+        # Рисуем элементы
+        draw = ImageDraw.Draw(card, 'RGBA')
+        
+        # Минималистичный логотип
+        self._draw_logo(draw)
+        
+        # Ультра-простые характеристики
+        self._draw_specs_ultra_minimal(draw)
+        
+        # Огромная яркая цена
+        self._draw_price_bold(draw)
+        
+        # Spotify accent линия
+        self._draw_accent_line(draw)
         
         # Бонусы
-        if self.pc_build.bonuses:
-            self._add_bonuses(draw)
+        if self.build.bonuses:
+            self._draw_bonuses(draw)
         
-        return self._save_image(img)
+        return card
     
-    def _prepare_photo(self, photo):
-        """Подготавливает фото"""
-        # Квадрат 1000x1000
-        min_side = min(photo.width, photo.height)
-        left = (photo.width - min_side) // 2
-        top = (photo.height - min_side) // 2
-        photo = photo.crop((left, top, left + min_side, top + min_side))
+    def _draw_logo(self, draw):
+        """
+        Рисует логотип ПАРТМАРТ в Spotify стиле
+        """
+        font = self.get_font(36, bold=True)
+        text = "ПАРТМАРТ"
         
-        photo = photo.resize((1000, 1000), Image.Resampling.LANCZOS)
+        x = 50
+        y = 30
         
-        return photo
+        # Просто текст, никаких подложек - максимальная простота
+        draw.text((x, y), text, fill=self.SPOTIFY_GREEN, font=font)
     
-    def _add_logo(self, draw):
-        """Лого"""
-        font = CardGenerator.get_font(32, bold=True)
-        draw.text((40, 30), "PARTMART", font=font, fill=self.COLOR_GREEN)
+    def _draw_specs_ultra_minimal(self, draw):
+        """
+        Рисует характеристики в ультра-минималистичном стиле
+        """
+        specs = self.build.get_specs_list()
+        
+        # Просто список без рамок и подложек
+        y_start = 850
+        x_start = 50
+        
+        font_value = self.get_font(24, bold=True)
+        
+        for i, (label, value) in enumerate(specs[:4]):
+            y = y_start + i * 50
+            
+            # Только значения, без иконок - чистота
+            # Убираем эмодзи из label
+            clean_label = label.split(' ', 1)[-1] if ' ' in label else label
+            
+            # Значение белым
+            draw.text((x_start, y), value, fill=self.SPOTIFY_WHITE, font=font_value)
     
-    def _add_specs(self, draw):
-        """Характеристики - только основные"""
-        font_value = CardGenerator.get_font(20, bold=False)
+    def _draw_price_bold(self, draw):
+        """
+        Рисует цену огромным жирным шрифтом
+        """
+        price_text = self.format_price(self.build.price)
+        font = self.get_font(80, bold=True)
         
-        # Только CPU и GPU
-        specs_text = f"{self.pc_build.cpu} • {self.pc_build.gpu}"
-        
-        # Длинную строку разбиваем
-        if len(specs_text) > 60:
-            draw.text((40, 1120), self.pc_build.cpu, font=font_value, fill=self.COLOR_GRAY)
-            draw.text((40, 1150), self.pc_build.gpu, font=font_value, fill=self.COLOR_GRAY)
-        else:
-            draw.text((40, 1135), specs_text, font=font_value, fill=self.COLOR_GRAY)
-    
-    def _add_price(self, draw):
-        """Цена - самый заметный элемент"""
-        price_font = CardGenerator.get_font(80, bold=True)
-        price_text = f"{int(self.pc_build.price):,}".replace(',', ' ') + " ₽"
-        
-        bbox = draw.textbbox((0, 0), price_text, font=price_font)
+        # Правый нижний угол
+        bbox = draw.textbbox((0, 0), price_text, font=font)
         text_width = bbox[2] - bbox[0]
         
-        # Справа снизу
-        x = 1200 - text_width - 40
-        y = 1090
+        x = self.width - text_width - 50
+        y = self.height - 130
         
-        draw.text((x, y), price_text, font=price_font, fill=self.COLOR_GREEN)
+        # Подложка минимальная
+        padding = 20
+        self.draw_rounded_rectangle(
+            draw,
+            [x - padding, y - padding,
+             x + text_width + padding, y + 90 + padding],
+            radius=15,
+            fill=self.SPOTIFY_DARK_GRAY
+        )
+        
+        # Цена зелёным
+        draw.text((x, y), price_text, fill=self.SPOTIFY_GREEN, font=font)
     
-    def _add_bonuses(self, draw):
-        """Бонусы"""
-        font = CardGenerator.get_font(16, bold=False)
-        line = self.pc_build.bonuses.split('\n')[0]  # Только первая строка
-        
-        if line:
-            draw.text((40, 1100), f"✨ {line.strip()}", font=font, fill=self.COLOR_WHITE)
+    def _draw_accent_line(self, draw):
+        """
+        Рисует Spotify accent линию
+        """
+        # Тонкая зелёная линия для акцента
+        y_pos = 830
+        draw.rectangle([50, y_pos, self.width - 50, y_pos + 3], 
+                      fill=self.SPOTIFY_GREEN)
     
-    def _save_image(self, img):
-        """Сохраняет изображение"""
-        filename = f"partmart_spotify_{self.pc_build.pk}.png"
-        filepath = os.path.join(settings.MEDIA_ROOT, 'generated', filename)
+    def _draw_bonuses(self, draw):
+        """
+        Рисует бонусы в Spotify стиле
+        """
+        font = self.get_font(18, bold=True)
         
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        img.save(filepath, 'PNG', quality=95, optimize=True)
+        bonuses_lines = self.build.bonuses.split('\n')[:2]
+        y_start = self.height - 200
         
-        return os.path.join('generated', filename)
+        for i, line in enumerate(bonuses_lines):
+            y = y_start + i * 30
+            
+            # Простой текст с точкой
+            draw.text((50, y), f"• {line}", fill=self.SPOTIFY_GRAY, font=font)

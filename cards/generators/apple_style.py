@@ -1,160 +1,205 @@
-from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
-import os
-from django.conf import settings
-from .card_generator import CardGenerator
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
+from .base_generator import BaseCardGenerator
 
 
-class AppleStyleGenerator:
+class AppleStyleGenerator(BaseCardGenerator):
     """
-    🍎 Apple Premium Style Generator
-    Минималистичный liquid glass дизайн
+    🍎 Apple Premium Style - минималистичный liquid glass дизайн
     """
     
-    # Цветовая палитра Apple
-    COLOR_WHITE = (255, 255, 255)
-    COLOR_LIGHT_GRAY = (247, 247, 247)
-    COLOR_DARK_GRAY = (29, 29, 31)
-    COLOR_ACCENT = (0, 122, 255)  # Apple Blue
-    COLOR_TEXT = (51, 51, 51)
-    
-    def __init__(self, pc_build):
-        self.pc_build = pc_build
-        self.canvas_size = (1200, 1200)
+    # Apple цветовая палитра
+    APPLE_WHITE = (255, 255, 255)
+    APPLE_LIGHT_GRAY = (242, 242, 247)
+    APPLE_GRAY = (174, 174, 178)
+    APPLE_DARK = (28, 28, 30)
+    APPLE_BLUE = (0, 122, 255)
+    APPLE_GREEN = (52, 199, 89)
     
     def generate(self):
         """
-        Генерирует карточку в Apple стиле
+        Генерирует карточку в стиле Apple Premium
         """
-        # Светлый фон
-        img = Image.new('RGB', self.canvas_size, color=self.COLOR_WHITE)
-        draw = ImageDraw.Draw(img)
+        # Светлый градиентный фон
+        card = self.create_gradient(
+            direction='vertical',
+            colors=[self.APPLE_WHITE, self.APPLE_LIGHT_GRAY]
+        )
         
-        # Фото ПК
-        pc_photo = Image.open(self.pc_build.photo.path)
-        pc_photo = self._prepare_photo(pc_photo)
+        # Загружаем фото ПК
+        photo = self.load_and_prepare_photo((900, 700))
         
-        # Размещаем фото в круглом контейнере
-        self._add_photo_container(img, pc_photo)
+        # Центрируем фото в верхней части
+        x_offset = (self.width - photo.width) // 2
+        y_offset = 80
         
-        # Лого
-        self._add_logo(draw)
+        # Создаём мягкую тень под фото
+        card = self._add_soft_shadow(card, photo, x_offset, y_offset)
         
-        # Характеристики в минималистичном стиле
-        self._add_specs(draw)
+        # Размещаем фото
+        card.paste(photo, (x_offset, y_offset))
         
-        # Цена - самый заметный элемент
-        self._add_price(draw)
+        # Рисуем элементы поверх
+        draw = ImageDraw.Draw(card, 'RGBA')
+        
+        # Логотип ПАРТМАРТ
+        self._draw_logo(draw)
+        
+        # Минималистичная панель характеристик
+        self._draw_specs_minimal(draw)
+        
+        # Цена в премиум стиле
+        self._draw_price_premium(draw)
         
         # Бонусы
-        if self.pc_build.bonuses:
-            self._add_bonuses(draw)
+        if self.build.bonuses:
+            self._draw_bonuses(draw)
         
-        return self._save_image(img)
+        return card
     
-    def _prepare_photo(self, photo):
-        """Подготавливает фото"""
-        # Квадратное кадрирование
-        min_side = min(photo.width, photo.height)
-        left = (photo.width - min_side) // 2
-        top = (photo.height - min_side) // 2
-        photo = photo.crop((left, top, left + min_side, top + min_side))
-        
-        # Размер 700x700
-        photo = photo.resize((700, 700), Image.Resampling.LANCZOS)
-        
-        return photo
-    
-    def _add_photo_container(self, img, photo):
-        """Добавляет фото в скругленном контейнере"""
-        # Создаем маску со скругленными углами
-        mask = Image.new('L', (700, 700), 0)
-        mask_draw = ImageDraw.Draw(mask)
-        mask_draw.rounded_rectangle([(0, 0), (700, 700)], radius=30, fill=255)
-        
-        # Применяем маску
-        output = Image.new('RGBA', (700, 700), (0, 0, 0, 0))
-        output.paste(photo, (0, 0))
-        output.putalpha(mask)
-        
-        # Вставляем в центр сверху
-        img.paste(output, (250, 80), output)
-        
-        # Добавляем тонкую тень
-        shadow = Image.new('RGBA', self.canvas_size, (0, 0, 0, 0))
+    def _add_soft_shadow(self, card, photo, x, y):
+        """
+        Добавляет мягкую тень под фото для объёма
+        """
+        # Создаём слой тени
+        shadow = Image.new('RGBA', card.size, (0, 0, 0, 0))
         shadow_draw = ImageDraw.Draw(shadow)
-        shadow_draw.rounded_rectangle(
-            [(255, 85), (945, 775)],
-            radius=30,
-            outline=(0, 0, 0, 20),
-            width=2
+        
+        # Рисуем размытую тень
+        shadow_padding = 40
+        shadow_draw.ellipse(
+            [x - shadow_padding, y + photo.height - 50,
+             x + photo.width + shadow_padding, y + photo.height + 80],
+            fill=(0, 0, 0, 40)
         )
-        img.paste(shadow, (0, 0), shadow)
+        
+        # Размываем тень
+        shadow = shadow.filter(ImageFilter.GaussianBlur(30))
+        
+        # Накладываем на карточку
+        card_rgba = card.convert('RGBA')
+        card_rgba = Image.alpha_composite(card_rgba, shadow)
+        
+        return card_rgba.convert('RGB')
     
-    def _add_logo(self, draw):
-        """Лого ПАРТМАРТ"""
-        font = CardGenerator.get_font(36, bold=True)
-        draw.text((50, 30), "PARTMART", font=font, fill=self.COLOR_DARK_GRAY)
-    
-    def _add_specs(self, draw):
-        """Характеристики"""
-        specs = self.pc_build.get_specs_list()
-        y_offset = 820
+    def _draw_logo(self, draw):
+        """
+        Рисует логотип ПАРТМАРТ в Apple стиле
+        """
+        font = self.get_font(38, bold=True)
+        text = "ПАРТМАРТ"
         
-        font_label = CardGenerator.get_font(14, bold=True)
-        font_value = CardGenerator.get_font(18, bold=False)
-        
-        # Две колонки
-        left_specs = specs[:4]
-        right_specs = specs[4:]
-        
-        # Левая колонка
-        for label, value in left_specs:
-            draw.text((80, y_offset), label, font=font_label, fill=self.COLOR_ACCENT)
-            draw.text((80, y_offset + 20), value, font=font_value, fill=self.COLOR_TEXT)
-            y_offset += 55
-        
-        # Правая колонка
-        y_offset = 820
-        for label, value in right_specs:
-            draw.text((620, y_offset), label, font=font_label, fill=self.COLOR_ACCENT)
-            draw.text((620, y_offset + 20), value, font=font_value, fill=self.COLOR_TEXT)
-            y_offset += 55
-    
-    def _add_price(self, draw):
-        """Цена"""
-        price_font = CardGenerator.get_font(68, bold=True)
-        price_text = f"{int(self.pc_build.price):,}".replace(',', ' ') + " ₽"
-        
-        bbox = draw.textbbox((0, 0), price_text, font=price_font)
+        # Центрируем вверху
+        bbox = draw.textbbox((0, 0), text, font=font)
         text_width = bbox[2] - bbox[0]
+        x = (self.width - text_width) // 2
+        y = 25
         
-        # Центрируем по горизонтали
-        x = (1200 - text_width) // 2
-        y = 1100
+        # Лёгкая подложка
+        padding = 12
+        self.draw_rounded_rectangle(
+            draw,
+            [x - padding, y - padding, 
+             x + text_width + padding, bbox[3] + padding],
+            radius=10,
+            fill=(255, 255, 255, 180)
+        )
         
-        draw.text((x, y), price_text, font=price_font, fill=self.COLOR_ACCENT)
+        # Текст серым
+        draw.text((x, y), text, fill=self.APPLE_DARK, font=font)
     
-    def _add_bonuses(self, draw):
-        """Бонусы"""
-        font = CardGenerator.get_font(14, bold=False)
-        lines = self.pc_build.bonuses.split('\n')[:2]
+    def _draw_specs_minimal(self, draw):
+        """
+        Рисует характеристики в минималистичном стиле
+        """
+        specs = self.build.get_specs_list()
         
-        # Центрируем
-        y = 1050
-        for line in lines:
-            text = f"✨ {line.strip()}"
+        # Создаём элегантную карточку по центру
+        panel_width = 1000
+        panel_height = 220
+        panel_x = (self.width - panel_width) // 2
+        panel_y = 820
+        
+        # Liquid glass панель
+        self.draw_rounded_rectangle(
+            draw,
+            [panel_x, panel_y, panel_x + panel_width, panel_y + panel_height],
+            radius=25,
+            fill=(255, 255, 255, 200),
+            outline=self.APPLE_GRAY,
+            width=1
+        )
+        
+        # Размещаем характеристики в 2 колонки
+        font_label = self.get_font(16)
+        font_value = self.get_font(20, bold=True)
+        
+        col_width = panel_width // 2
+        
+        for i, (label, value) in enumerate(specs[:4]):
+            col = i % 2
+            row = i // 2
+            
+            x = panel_x + 40 + col * col_width
+            y = panel_y + 40 + row * 70
+            
+            # Метка серым
+            draw.text((x, y), label, fill=self.APPLE_GRAY, font=font_label)
+            # Значение чёрным жирным
+            draw.text((x, y + 25), value, fill=self.APPLE_DARK, font=font_value)
+    
+    def _draw_price_premium(self, draw):
+        """
+        Рисует цену в премиум стиле Apple
+        """
+        price_text = self.format_price(self.build.price)
+        font = self.get_font(68, bold=True)
+        
+        bbox = draw.textbbox((0, 0), price_text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        
+        # Центрируем внизу
+        x = (self.width - text_width) // 2
+        y = 1070
+        
+        # Элегантная подложка с градиентом (имитация)
+        padding = 30
+        self.draw_rounded_rectangle(
+            draw,
+            [x - padding, y - padding,
+             x + text_width + padding, y + text_height + padding + 15],
+            radius=22,
+            fill=(0, 122, 255, 255)  # Apple Blue
+        )
+        
+        # Текст белым
+        draw.text((x, y), price_text, fill=self.APPLE_WHITE, font=font)
+    
+    def _draw_bonuses(self, draw):
+        """
+        Рисует бонусы в Apple стиле
+        """
+        font = self.get_font(17)
+        
+        bonuses_lines = self.build.bonuses.split('\n')[:2]
+        y_start = 1010
+        
+        for i, line in enumerate(bonuses_lines):
+            y = y_start + i * 28
+            text = f"✓ {line}"
+            
             bbox = draw.textbbox((0, 0), text, font=font)
             text_width = bbox[2] - bbox[0]
-            x = (1200 - text_width) // 2
-            draw.text((x, y), text, font=font, fill=self.COLOR_TEXT)
-            y += 22
-    
-    def _save_image(self, img):
-        """Сохраняет изображение"""
-        filename = f"partmart_apple_{self.pc_build.pk}.png"
-        filepath = os.path.join(settings.MEDIA_ROOT, 'generated', filename)
-        
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        img.save(filepath, 'PNG', quality=95, optimize=True)
-        
-        return os.path.join('generated', filename)
+            x = (self.width - text_width) // 2
+            
+            # Лёгкая подложка
+            padding = 10
+            self.draw_rounded_rectangle(
+                draw,
+                [x - padding, bbox[1] + y - padding,
+                 x + text_width + padding, bbox[3] + y + padding],
+                radius=8,
+                fill=(52, 199, 89, 60)  # Apple Green
+            )
+            
+            draw.text((x, y), text, fill=self.APPLE_GREEN, font=font)

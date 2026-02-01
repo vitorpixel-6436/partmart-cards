@@ -3,47 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ПАРТМАРТ Cards{% endblock %}</title>
-    {% load static %}
+    <title>{% block title %}ПАРТМАРТ Cards Generator{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Liquid Glass CSS -->
     <link rel="stylesheet" href="{% static 'css/glass-liquid.css' %}">
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    
+    {% load static %}
 </head>
-<body>
+<body class="bg-gradient-to-br from-black via-gray-900 to-black min-h-screen text-white">
+    
     <!-- Navigation -->
-    <nav class="nav">
-        <div class="nav-container">
-            <a href="{% url 'cards:index' %}" class="nav-brand">👾 PARTMART</a>
-            <ul class="nav-links">
-                <li><a href="{% url 'cards:index' %}" class="nav-link">Главная</a></li>
-                <li><a href="{% url 'cards:create' %}" class="nav-link">Создать</a></li>
-                <li><a href="{% url 'cards:gallery' %}" class="nav-link">Галерея</a></li>
-                <li><a href="{% url 'cards:presets' %}" class="nav-link">Пресеты</a></li>
-            </ul>
+    <nav class="glass-panel sticky top-0 z-50 backdrop-blur-xl">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <a href="{% url 'cards:index' %}" class="text-2xl font-bold bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent">
+                    👾 ПАРТМАРТ
+                </a>
+                
+                <div class="flex gap-4">
+                    <a href="{% url 'cards:create' %}" class="steam-button">
+                        ➕ Создать карточку
+                    </a>
+                    <a href="{% url 'cards:gallery' %}" class="steam-button-secondary">
+                        🖼 Галерея
+                    </a>
+                </div>
+            </div>
         </div>
     </nav>
-
+    
     <!-- Messages -->
     {% if messages %}
-    <div class="messages">
+    <div class="container mx-auto px-6 py-4">
         {% for message in messages %}
-        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+        <div class="glass-panel mb-4 p-4 rounded-xl {% if message.tags == 'error' %}border-2 border-red-500{% elif message.tags == 'success' %}border-2 border-green-500{% endif %}">
             {{ message }}
         </div>
         {% endfor %}
     </div>
     {% endif %}
-
+    
     <!-- Main Content -->
-    <main class="container">
-        {% block content %}{% endblock %}
+    <main class="container mx-auto px-6 py-8">
+        {% block content %}
+        {% endblock %}
     </main>
-
+    
     <!-- Footer -->
-    <footer class="text-center" style="padding: 40px 0; color: rgba(255,255,255,0.5);">
-        <p>&copy; 2026 ПАРТМАРТ Cards Generator | Made with ❤️</p>
+    <footer class="glass-panel mt-20 py-8">
+        <div class="container mx-auto px-6 text-center text-gray-400">
+            <p>🎨 ПАРТМАРТ Cards Generator © 2026</p>
+            <p class="text-sm mt-2">Premium карточки для продажи компьютеров на Авито</p>
+        </div>
     </footer>
-
+    
+    <!-- Custom JS -->
     <script src="{% static 'js/card-generator.js' %}"></script>
     {% block extra_js %}{% endblock %}
+    
 </body>
 </html>
