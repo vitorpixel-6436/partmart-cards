@@ -1,44 +1,47 @@
 {% extends 'cards/base.html' %}
+{% load static %}
 
 {% block title %}Пресеты - ПАРТМАРТ{% endblock %}
 
 {% block content %}
-<div class="header">
-    <h1>💾 Пресеты</h1>
-    <p>Шаблоны характеристик для быстрого создания</p>
-</div>
-
-{% if presets %}
-<div class="grid grid-2">
-    {% for preset in presets %}
-    <div class="glass-panel">
-        <h3 style="margin-bottom: 16px; font-size: 1.3rem;">{{ preset.name }}</h3>
-        <div style="margin-bottom: 12px;">
-            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">🖥 Процессор</p>
-            <p>{{ preset.cpu }}</p>
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+        💾 Пресеты характеристик
+    </h1>
+    
+    {% if presets %}
+    <div class="space-y-4">
+        {% for preset in presets %}
+        <div class="glass-panel p-6 rounded-2xl hover-glow transition-all duration-300">
+            <h3 class="text-xl font-bold mb-4">{{ preset.name }}</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="glass-card p-3 rounded-xl">
+                    <div class="text-sm text-gray-400">🖥 Процессор</div>
+                    <div class="font-semibold">{{ preset.cpu }}</div>
+                </div>
+                <div class="glass-card p-3 rounded-xl">
+                    <div class="text-sm text-gray-400">🎮 Видеокарта</div>
+                    <div class="font-semibold">{{ preset.gpu }}</div>
+                </div>
+                <div class="glass-card p-3 rounded-xl">
+                    <div class="text-sm text-gray-400">🧠 Оперативка</div>
+                    <div class="font-semibold">{{ preset.ram }}</div>
+                </div>
+                <div class="glass-card p-3 rounded-xl">
+                    <div class="text-sm text-gray-400">💾 Накопитель</div>
+                    <div class="font-semibold">{{ preset.storage }}</div>
+                </div>
+            </div>
         </div>
-        <div style="margin-bottom: 12px;">
-            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">🎮 Видеокарта</p>
-            <p>{{ preset.gpu }}</p>
-        </div>
-        <div style="margin-bottom: 12px;">
-            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">🧠 RAM</p>
-            <p>{{ preset.ram }}</p>
-        </div>
-        <div style="margin-bottom: 16px;">
-            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">💾 Накопитель</p>
-            <p>{{ preset.storage }}</p>
-        </div>
-        <button onclick="alert('Функция загрузки пресета будет добавлена в следующих обновлениях')" class="btn-glass" style="width: 100%;">
-            ✅ Использовать
-        </button>
+        {% endfor %}
     </div>
-    {% endfor %}
+    {% else %}
+    <div class="glass-panel p-12 rounded-2xl text-center">
+        <div class="text-6xl mb-4">📚</div>
+        <h2 class="text-2xl font-bold mb-4">Пресеты не найдены</h2>
+        <p class="text-gray-400">Добавьте пресеты через админ-панель Django</p>
+    </div>
+    {% endif %}
 </div>
-{% else %}
-<div class="glass-panel text-center" style="padding: 60px 20px;">
-    <p style="font-size: 1.5rem; margin-bottom: 16px;">😔 Пресетов пока нет</p>
-    <p style="color: rgba(255,255,255,0.6);">Добавьте пресеты через Django Admin</p>
-</div>
-{% endif %}
 {% endblock %}

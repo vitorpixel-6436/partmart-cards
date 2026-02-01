@@ -1,105 +1,82 @@
-// 🎮 PARTMART Cards - Интерактивность
+// 🎮 PARTMART Cards Generator - Interactive Features
 
-// Drag & Drop загрузка файлов
-document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.querySelector('input[type="file"]');
-    const dropZone = document.getElementById('drop-zone');
+// Smooth scroll behavior
+document.documentElement.style.scrollBehavior = 'smooth';
+
+// Add fade-in animation to elements on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const elements = document.querySelectorAll('.glass-panel, .glass-card');
     
-    if (dropZone && fileInput) {
-        // Prevent default drag behaviors
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, preventDefaults, false);
-            document.body.addEventListener(eventName, preventDefaults, false);
-        });
+    elements.forEach((el, index) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
         
-        // Highlight drop zone when item is dragged over it
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropZone.addEventListener(eventName, highlight, false);
-        });
-        
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, unhighlight, false);
-        });
-        
-        // Handle dropped files
-        dropZone.addEventListener('drop', handleDrop, false);
-        
-        // Click to upload
-        dropZone.addEventListener('click', () => fileInput.click());
-    }
-    
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    
-    function highlight(e) {
-        dropZone.classList.add('highlight');
-    }
-    
-    function unhighlight(e) {
-        dropZone.classList.remove('highlight');
-    }
-    
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        
-        if (files.length) {
-            fileInput.files = files;
-            handleFiles(files);
-        }
-    }
-    
-    function handleFiles(files) {
-        ([...files]).forEach(previewFile);
-    }
-    
-    function previewFile(file) {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onloadend = function() {
-            const preview = document.getElementById('photo-preview');
-            if (preview) {
-                preview.src = reader.result;
-                preview.style.display = 'block';
-            }
-        }
-    }
+        setTimeout(() => {
+            el.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
 });
 
-// Live Preview обновление
-function updatePreview() {
-    // Можно добавить AJAX для live preview
-    console.log('Превью обновлено');
-}
+// Style selector radio button visual feedback
+const styleOptions = document.querySelectorAll('.style-option');
+styleOptions.forEach(option => {
+    option.addEventListener('click', () => {
+        styleOptions.forEach(opt => opt.classList.remove('selected'));
+        option.classList.add('selected');
+    });
+});
 
-// Preset loader
-function loadPreset(presetId) {
-    // Загрузка пресета через AJAX
-    console.log(`Загрузка пресета ${presetId}`);
-}
-
-// Smooth scroll
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
+// Form validation enhancement
+const forms = document.querySelectorAll('form');
+forms.forEach(form => {
+    form.addEventListener('submit', (e) => {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '⏳ Обработка...';
         }
     });
 });
 
-// Auto-hide messages
-setTimeout(() => {
-    const messages = document.querySelectorAll('.alert');
-    messages.forEach(msg => {
+// Notification auto-hide
+const messages = document.querySelectorAll('.glass-panel[class*="border"]');
+messages.forEach(msg => {
+    setTimeout(() => {
+        msg.style.transition = 'all 0.5s ease';
         msg.style.opacity = '0';
-        msg.style.transform = 'translateX(400px)';
-        setTimeout(() => msg.remove(), 300);
+        msg.style.transform = 'translateX(100%)';
+        setTimeout(() => msg.remove(), 500);
+    }, 5000);
+});
+
+// Image preview zoom
+const images = document.querySelectorAll('img');
+images.forEach(img => {
+    img.addEventListener('click', () => {
+        if (img.classList.contains('zoomed')) {
+            img.classList.remove('zoomed');
+            img.style.transform = 'scale(1)';
+            img.style.cursor = 'zoom-in';
+        } else {
+            img.classList.add('zoomed');
+            img.style.transform = 'scale(1.5)';
+            img.style.cursor = 'zoom-out';
+            img.style.transition = 'transform 0.3s ease';
+        }
     });
-}, 5000);
+});
+
+// Add parallax effect to hero section
+window.addEventListener('scroll', () => {
+    const scrolled = window.pageYOffset;
+    const parallaxElements = document.querySelectorAll('.glass-panel');
+    
+    parallaxElements.forEach((el, index) => {
+        const speed = 0.05 * (index + 1);
+        el.style.transform = `translateY(${scrolled * speed}px)`;
+    });
+});
+
+console.log('👾 PARTMART Cards Generator loaded successfully!');

@@ -1,223 +1,135 @@
-/* 🎨 PARTMART Cards - Основные стили */
+/* 🎮 Steam + Spotify Style Buttons - из music-stream-app */
 
-/* Style Selector */
-.style-selector {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    margin: 24px 0;
-}
-
-.style-card {
-    padding: 20px;
-    text-align: center;
-    cursor: pointer;
-    position: relative;
-}
-
-.style-card input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-}
-
-.style-card input[type="radio"]:checked + .style-content {
-    background: var(--glass-white-strong);
-    border-color: var(--accent-apple);
-    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
-}
-
-.style-content {
-    background: var(--glass-white);
-    backdrop-filter: blur(12px);
-    border: 2px solid var(--glass-border);
-    border-radius: 12px;
-    padding: 20px;
-    transition: all 0.3s ease;
-}
-
-.style-content:hover {
-    transform: scale(1.05);
-    border-color: var(--accent-apple);
-}
-
-.style-icon {
-    font-size: 2.5rem;
-    margin-bottom: 12px;
-}
-
-.style-name {
-    font-size: 1.1rem;
+/* Steam Style Button */
+.steam-button {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    padding: 0.75rem 2rem;
+    border-radius: 0.75rem;
     font-weight: 600;
-    color: #ffffff;
-}
-
-/* Form */
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
-}
-
-.form-control {
-    width: 100%;
-    padding: 12px 16px;
-    background: var(--glass-white);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-    border-radius: 8px;
-    color: #ffffff;
-    font-size: 16px;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: var(--accent-apple);
-    background: var(--glass-white-strong);
-    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
-}
-
-/* Preview */
-.preview-container {
-    margin: 40px 0;
-    text-align: center;
-}
-
-.preview-image {
-    max-width: 100%;
-    height: auto;
-    border-radius: 16px;
-    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
-}
-
-/* Gallery Grid */
-.gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 24px;
-    margin: 40px 0;
-}
-
-.gallery-item {
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
     overflow: hidden;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
 }
 
-.gallery-item:hover {
-    transform: scale(1.05);
-}
-
-.gallery-item img {
+.steam-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
     width: 100%;
-    height: auto;
-    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
 }
 
-/* Messages */
-.messages {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-    max-width: 400px;
+.steam-button:hover::before {
+    left: 100%;
 }
 
-.alert {
-    background: var(--glass-white-strong);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin-bottom: 12px;
-    color: #ffffff;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    animation: slideIn 0.3s ease-out;
+.steam-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(239, 68, 68, 0.6);
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
 }
 
-.alert-success {
-    border-left: 4px solid var(--accent-spotify);
+.steam-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4);
 }
 
-.alert-error {
-    border-left: 4px solid var(--accent-msi);
+/* Steam Secondary Button */
+.steam-button-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    padding: 0.75rem 2rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
 }
 
-@keyframes slideIn {
+.steam-button-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Form Inputs */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+textarea,
+select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    width: 100%;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: rgba(239, 68, 68, 0.5);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(239, 68, 68, 0.5);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(239, 68, 68, 0.7);
+}
+
+/* Animations */
+@keyframes fadeIn {
     from {
-        transform: translateX(400px);
         opacity: 0;
+        transform: translateY(20px);
     }
     to {
-        transform: translateX(0);
         opacity: 1;
+        transform: translateY(0);
     }
 }
 
-/* Navigation */
-.nav {
-    background: var(--glass-white);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--glass-border);
-    padding: 16px 0;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
 }
 
-.nav-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Grid Hover Effect */
+.grid > * {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.nav-brand {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #ffffff;
-    text-decoration: none;
-}
-
-.nav-links {
-    display: flex;
-    gap: 24px;
-    list-style: none;
-}
-
-.nav-link {
-    color: rgba(255, 255, 255, 0.8);
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.nav-link:hover {
-    color: #ffffff;
-}
-
-/* Utilities */
-.text-center {
-    text-align: center;
-}
-
-.mt-4 {
-    margin-top: 2rem;
-}
-
-.mb-4 {
-    margin-bottom: 2rem;
-}
-
-.p-4 {
-    padding: 2rem;
+.grid > *:hover {
+    z-index: 10;
 }
