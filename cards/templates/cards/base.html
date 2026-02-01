@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ПАРТМАРТ Cards{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/glass-liquid.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="{% url 'cards:index' %}" class="nav-brand">👾 PARTMART</a>
+            <ul class="nav-links">
+                <li><a href="{% url 'cards:index' %}" class="nav-link">Главная</a></li>
+                <li><a href="{% url 'cards:create' %}" class="nav-link">Создать</a></li>
+                <li><a href="{% url 'cards:gallery' %}" class="nav-link">Галерея</a></li>
+                <li><a href="{% url 'cards:presets' %}" class="nav-link">Пресеты</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center" style="padding: 40px 0; color: rgba(255,255,255,0.5);">
+        <p>&copy; 2026 ПАРТМАРТ Cards Generator | Made with ❤️</p>
+    </footer>
+
+    <script src="{% static 'js/card-generator.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

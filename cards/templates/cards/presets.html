@@ -1,0 +1,44 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Пресеты - ПАРТМАРТ{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>💾 Пресеты</h1>
+    <p>Шаблоны характеристик для быстрого создания</p>
+</div>
+
+{% if presets %}
+<div class="grid grid-2">
+    {% for preset in presets %}
+    <div class="glass-panel">
+        <h3 style="margin-bottom: 16px; font-size: 1.3rem;">{{ preset.name }}</h3>
+        <div style="margin-bottom: 12px;">
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">🖥 Процессор</p>
+            <p>{{ preset.cpu }}</p>
+        </div>
+        <div style="margin-bottom: 12px;">
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">🎮 Видеокарта</p>
+            <p>{{ preset.gpu }}</p>
+        </div>
+        <div style="margin-bottom: 12px;">
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">🧠 RAM</p>
+            <p>{{ preset.ram }}</p>
+        </div>
+        <div style="margin-bottom: 16px;">
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">💾 Накопитель</p>
+            <p>{{ preset.storage }}</p>
+        </div>
+        <button onclick="alert('Функция загрузки пресета будет добавлена в следующих обновлениях')" class="btn-glass" style="width: 100%;">
+            ✅ Использовать
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="glass-panel text-center" style="padding: 60px 20px;">
+    <p style="font-size: 1.5rem; margin-bottom: 16px;">😔 Пресетов пока нет</p>
+    <p style="color: rgba(255,255,255,0.6);">Добавьте пресеты через Django Admin</p>
+</div>
+{% endif %}
+{% endblock %}

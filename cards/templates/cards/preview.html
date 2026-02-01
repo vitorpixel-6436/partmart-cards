@@ -1,0 +1,82 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Превью - {{ pc_build }} - ПАРТМАРТ{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>👁 Превью карточки</h1>
+    <p>{{ pc_build }}</p>
+</div>
+
+<div class="grid grid-2">
+    <!-- Превью -->
+    <div class="glass-panel">
+        <h3 style="margin-bottom: 16px;">🖼 Генерированная карточка</h3>
+        {% if pc_build.generated_card %}
+        <img src="{{ pc_build.generated_card.url }}" alt="{{ pc_build }}" class="preview-image">
+        <div class="text-center mt-4">
+            <a href="{% url 'cards:download' pc_build.pk %}" class="btn-glass btn-spotify" style="padding: 12px 24px;">
+                ⬇️ Скачать PNG
+            </a>
+        </div>
+        {% else %}
+        <div class="text-center" style="padding: 40px;">
+            <p style="margin-bottom: 24px; font-size: 1.1rem;">Карточка еще не сгенерирована</p>
+            <a href="{% url 'cards:generate' pc_build.pk %}" class="btn-glass btn-apple" style="padding: 16px 32px; font-size: 1.1rem;">
+                ✨ Сгенерировать карточку
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Характеристики -->
+    <div class="glass-panel">
+        <h3 style="margin-bottom: 16px;">📊 Характеристики</h3>
+        
+        <div style="margin-bottom: 24px;">
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 4px;">Стиль</p>
+            <p style="font-size: 1.2rem; font-weight: 600;">{{ pc_build.get_style_display }}</p>
+        </div>
+
+        {% for label, value in pc_build.get_specs_list %}
+        <div style="margin-bottom: 16px;">
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 4px;">{{ label }}</p>
+            <p style="font-size: 1.1rem;">{{ value }}</p>
+        </div>
+        {% endfor %}
+
+        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--glass-border);">
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 4px;">💰 Цена</p>
+            <p style="font-size: 2rem; font-weight: 800; color: var(--accent-spotify);">{{ pc_build.price }} ₽</p>
+        </div>
+
+        {% if pc_build.bonuses %}
+        <div style="margin-top: 16px;">
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 8px;">✨ Бонусы</p>
+            <p style="font-size: 1rem; white-space: pre-line;">{{ pc_build.bonuses }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Действия -->
+<div class="glass-panel mt-4 text-center">
+    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+        {% if not pc_build.generated_card %}
+        <a href="{% url 'cards:generate' pc_build.pk %}" class="btn-glass btn-apple" style="padding: 12px 24px;">
+            ✨ Сгенерировать
+        </a>
+        {% else %}
+        <a href="{% url 'cards:generate' pc_build.pk %}" class="btn-glass btn-msi" style="padding: 12px 24px;">
+            🔄 Перегенерировать
+        </a>
+        {% endif %}
+        <a href="{% url 'cards:gallery' %}" class="btn-glass" style="padding: 12px 24px;">
+            🖼 Все карточки
+        </a>
+        <a href="{% url 'cards:create' %}" class="btn-glass" style="padding: 12px 24px;">
+            ➕ Новая карточка
+        </a>
+    </div>
+</div>
+{% endblock %}

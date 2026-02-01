@@ -1,0 +1,113 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Создать карточку - ПАРТМАРТ{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>➕ Создать карточку</h1>
+    <p>Заполните характеристики и загрузите фото ПК</p>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="glass-panel">
+    {% csrf_token %}
+    
+    <!-- Фотография -->
+    <div class="form-group">
+        <label class="form-label">📸 Фотография ПК</label>
+        <div id="drop-zone" class="glass-panel" style="padding: 40px; text-align: center; cursor: pointer; border: 2px dashed var(--glass-border);">
+            <p style="font-size: 1.2rem; margin-bottom: 8px;">📎 Перетащите фото сюда</p>
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">или нажмите для выбора файла</p>
+            {{ form.photo }}
+        </div>
+        <img id="photo-preview" style="max-width: 300px; margin-top: 16px; border-radius: 8px; display: none;">
+    </div>
+
+    <!-- Стиль -->
+    <div class="form-group">
+        <label class="form-label">🎨 Выберите стиль</label>
+        <div class="style-selector">
+            {% for value, label in form.style.field.choices %}
+            <div class="style-card">
+                <input type="radio" name="style" value="{{ value }}" id="style_{{ value }}" {% if value == 'msi' %}checked{% endif %}>
+                <label for="style_{{ value }}" class="style-content">
+                    <div class="style-icon">{{ label }}</div>
+                    <div class="style-name">{{ label }}</div>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Основные характеристики -->
+    <h3 style="margin: 32px 0 16px;">⚙️ Основные характеристики</h3>
+    <div class="grid grid-2">
+        <div class="form-group">
+            <label class="form-label">🖥 Процессор</label>
+            {{ form.cpu }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">🎮 Видеокарта</label>
+            {{ form.gpu }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">🧠 Оперативная память</label>
+            {{ form.ram }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">💾 Накопитель</label>
+            {{ form.storage }}
+        </div>
+    </div>
+
+    <!-- Дополнительные -->
+    <h3 style="margin: 32px 0 16px;">🔧 Дополнительно (опционально)</h3>
+    <div class="grid grid-3">
+        <div class="form-group">
+            <label class="form-label">Мат. плата</label>
+            {{ form.motherboard }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Блок питания</label>
+            {{ form.psu }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Корпус</label>
+            {{ form.case }}
+        </div>
+    </div>
+
+    <!-- Цена и бонусы -->
+    <h3 style="margin: 32px 0 16px;">💰 Цена и бонусы</h3>
+    <div class="grid grid-2">
+        <div class="form-group">
+            <label class="form-label">💵 Цена (руб.)</label>
+            {{ form.price }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">✨ Бонусы</label>
+            {{ form.bonuses }}
+        </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="text-center mt-4">
+        <button type="submit" class="btn-glass btn-apple" style="padding: 16px 48px; font-size: 1.1rem;">
+            ✅ Создать карточку
+        </button>
+    </div>
+</form>
+
+<!-- Пресеты -->
+{% if presets %}
+<div class="glass-panel mt-4">
+    <h3 style="margin-bottom: 16px;">💾 Быстрые пресеты</h3>
+    <div class="grid grid-3">
+        {% for preset in presets %}
+        <button onclick="loadPreset({{ preset.pk }})" class="btn-glass" style="width: 100%;">
+            {{ preset.name }}
+        </button>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
