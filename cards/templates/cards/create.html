@@ -1,180 +1,212 @@
 {% extends 'cards/base.html' %}
-{% load static %}
-{% load crispy_forms_tags %}
 
-{% block title %}Создать карточку - ПАРТМАРТ{% endblock %}
+{% block title %}Создать карточку | ПАРТМАРТ{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto">
-    <h1 class="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
-        ➕ Создать новую карточку
-    </h1>
+    <!-- Header -->
+    <div class="glass-panel rounded-3xl p-8 mb-8 text-center">
+        <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+            Создать карточку
+        </h1>
+        <p class="text-gray-300">Заполните характеристики ПК и выберите стиль оформления</p>
+    </div>
     
-    <div class="glass-panel p-8 rounded-2xl">
-        <form method="post" enctype="multipart/form-data" id="createForm">
-            {% csrf_token %}
-            
-            <!-- Фото -->
-            <div class="mb-8">
-                <label class="block text-lg font-bold mb-3">📸 Фотография ПК</label>
-                <div id="dropZone" class="border-2 border-dashed border-gray-600 rounded-xl p-12 text-center hover:border-red-500 transition-all duration-300 cursor-pointer">
-                    <p class="text-gray-400 mb-2">Перетащите фото сюда или кликните для выбора</p>
-                    <p class="text-sm text-gray-500">PNG, JPG до 10MB</p>
-                    {{ form.photo }}
-                </div>
-                <div id="preview" class="mt-4 hidden">
-                    <img id="previewImg" class="max-w-full h-64 object-cover rounded-xl mx-auto">
-                </div>
+    <!-- Presets Quick Select -->
+    {% if presets %}
+    <div class="glass-dark rounded-2xl p-6 mb-8">
+        <h3 class="text-xl font-bold mb-4">⚡ Быстрые пресеты</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {% for preset in presets %}
+            <button onclick="loadPreset('{{ preset.pk }}')"
+                    class="glass-light rounded-xl p-3 hover:bg-blue-500/20 text-sm">
+                {{ preset.name }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Form -->
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- Photo Upload -->
+        <div class="glass-panel rounded-2xl p-8">
+            <h3 class="text-2xl font-bold mb-4">📸 Фото компьютера</h3>
+            <div id="drop-zone" class="glass-dark rounded-xl p-12 text-center border-2 border-dashed border-gray-600 hover:border-blue-400 cursor-pointer">
+                <div class="text-6xl mb-4">📁</div>
+                <p class="text-xl mb-2">Перетащите фото сюда</p>
+                <p class="text-gray-400 mb-4">или</p>
+                {{ form.photo }}
+                <label for="id_photo" class="steam-btn px-6 py-3 rounded-xl cursor-pointer inline-block">
+                    Выбрать файл
+                </label>
             </div>
-            
-            <!-- Основные характеристики -->
-            <div class="glass-card p-6 rounded-xl mb-6">
-                <h3 class="text-xl font-bold mb-4">💻 Основные характеристики</h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div id="preview" class="mt-4"></div>
+        </div>
+        
+        <!-- Main Specs -->
+        <div class="glass-panel rounded-2xl p-8">
+            <h3 class="text-2xl font-bold mb-6">⚙️ Основные характеристики</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold mb-2 text-gray-300">🖥 Процессор</label>
+                    {{ form.cpu }}
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2 text-gray-300">🎮 Видеокарта</label>
+                    {{ form.gpu }}
+                </div>
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-semibold mb-2">🖥 Процессор</label>
-                        {{ form.cpu }}
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">🎮 Видеокарта</label>
-                        {{ form.gpu }}
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">🧠 Оперативка</label>
+                        <label class="block text-sm font-bold mb-2 text-gray-300">🧠 Оперативная память</label>
                         {{ form.ram }}
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold mb-2">💾 Накопитель</label>
+                        <label class="block text-sm font-bold mb-2 text-gray-300">💾 Накопитель</label>
                         {{ form.storage }}
                     </div>
                 </div>
             </div>
-            
-            <!-- Дополнительные компоненты -->
-            <div class="glass-card p-6 rounded-xl mb-6">
-                <h3 class="text-xl font-bold mb-4">🔧 Дополнительно (опционально)</h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        </div>
+        
+        <!-- Additional Components -->
+        <div class="glass-panel rounded-2xl p-8">
+            <h3 class="text-2xl font-bold mb-6">🔧 Дополнительные компоненты</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold mb-2 text-gray-300">🔌 Материнская плата</label>
+                    {{ form.motherboard }}
+                </div>
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-semibold mb-2">Мат. плата</label>
-                        {{ form.motherboard }}
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">Блок питания</label>
+                        <label class="block text-sm font-bold mb-2 text-gray-300">⚡ Блок питания</label>
                         {{ form.psu }}
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold mb-2">Корпус</label>
+                        <label class="block text-sm font-bold mb-2 text-gray-300">📦 Корпус</label>
                         {{ form.case }}
                     </div>
                 </div>
             </div>
-            
-            <!-- Цена и бонусы -->
-            <div class="glass-card p-6 rounded-xl mb-6">
-                <h3 class="text-xl font-bold mb-4">💰 Цена и бонусы</h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">💵 Цена (₽)</label>
-                        {{ form.price }}
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">🎁 Бонусы</label>
-                        {{ form.bonuses }}
-                    </div>
+        </div>
+        
+        <!-- Price & Bonuses -->
+        <div class="glass-panel rounded-2xl p-8">
+            <h3 class="text-2xl font-bold mb-6">💰 Цена и бонусы</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold mb-2 text-gray-300">💵 Цена (₽)</label>
+                    {{ form.price }}
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2 text-gray-300">🎁 Бонусы</label>
+                    {{ form.bonuses }}
                 </div>
             </div>
-            
-            <!-- Выбор стиля -->
-            <div class="glass-card p-6 rounded-xl mb-8">
-                <h3 class="text-xl font-bold mb-4">🎨 Выберите стиль карточки</h3>
-                
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {% for value, label in form.style.field.choices %}
-                    <label class="style-option glass-card p-4 rounded-xl text-center cursor-pointer hover-glow transition-all duration-300">
-                        <input type="radio" name="style" value="{{ value }}" {% if forloop.first %}checked{% endif %} class="hidden">
-                        <div class="text-3xl mb-2">
-                            {% if value == 'msi' %}🔴
-                            {% elif value == 'steam' %}🎮
-                            {% elif value == 'apple' %}🍎
-                            {% elif value == 'spotify' %}🎵
+        </div>
+        
+        <!-- Style Selection -->
+        <div class="glass-panel rounded-2xl p-8">
+            <h3 class="text-2xl font-bold mb-6">🎨 Выберите стиль карточки</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for value, label in form.style.field.choices %}
+                <label class="glass-light rounded-xl p-6 cursor-pointer hover:bg-blue-500/20 flex items-center space-x-4">
+                    <input type="radio" name="style" value="{{ value }}" 
+                           {% if form.style.value == value or forloop.first and not form.style.value %}checked{% endif %}
+                           class="w-5 h-5">
+                    <div>
+                        <div class="text-2xl mb-1">{{ label }}</div>
+                        <div class="text-sm text-gray-400">
+                            {% if value == 'msi' %}Агрессивный gaming дизайн
+                            {% elif value == 'steam' %}Glass morphism эффекты
+                            {% elif value == 'apple' %}Минималистичный premium
+                            {% elif value == 'spotify' %}Ультра-чистый стиль
                             {% endif %}
                         </div>
-                        <div class="font-bold">{{ label }}</div>
-                    </label>
-                    {% endfor %}
-                </div>
+                    </div>
+                </label>
+                {% endfor %}
             </div>
-            
-            <!-- Кнопки -->
-            <div class="flex gap-4 justify-center">
-                <button type="submit" class="steam-button text-lg px-8 py-3">
-                    ✨ Создать сборку
-                </button>
-                <a href="{% url 'cards:index' %}" class="steam-button-secondary text-lg px-8 py-3">
-                    ❌ Отмена
-                </a>
-            </div>
-        </form>
-    </div>
+        </div>
+        
+        <!-- Submit -->
+        <div class="flex space-x-4">
+            <button type="submit" class="spotify-btn flex-1 py-5 rounded-xl font-bold text-xl">
+                🚀 Создать карточку
+            </button>
+            <a href="{% url 'cards:index' %}" class="glass-light px-8 py-5 rounded-xl font-bold text-xl text-center">
+                Отмена
+            </a>
+        </div>
+    </form>
 </div>
 
 <style>
-.style-option input:checked + div {
-    transform: scale(1.1);
-}
-.style-option:has(input:checked) {
-    border: 2px solid #ef4444;
-    box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
-}
-#id_photo {
-    display: none;
-}
+    input[type="text"],
+    input[type="number"],
+    textarea {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: white;
+        font-size: 16px;
+    }
+    
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus {
+        outline: none;
+        border-color: rgba(59, 130, 246, 0.5);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    input[type="file"] {
+        display: none;
+    }
 </style>
 
 <script>
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('id_photo');
-const preview = document.getElementById('preview');
-const previewImg = document.getElementById('previewImg');
-
-dropZone.addEventListener('click', () => fileInput.click());
-
-dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.classList.add('border-red-500');
-});
-
-dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('border-red-500');
-});
-
-dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('border-red-500');
+    // Drag & Drop
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('id_photo');
+    const preview = document.getElementById('preview');
     
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        fileInput.files = files;
-        showPreview(files[0]);
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#3b82f6';
+    });
+    
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.borderColor = '#4b5563';
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#4b5563';
+        
+        const files = e.dataTransfer.files;
+        if (files.length) {
+            fileInput.files = files;
+            showPreview(files[0]);
+        }
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            showPreview(e.target.files[0]);
+        }
+    });
+    
+    function showPreview(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.innerHTML = `<img src="${e.target.result}" class="rounded-xl max-h-64 mx-auto">`;
+        };
+        reader.readAsDataURL(file);
     }
-});
-
-fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-        showPreview(e.target.files[0]);
-    }
-});
-
-function showPreview(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        previewImg.src = e.target.result;
-        preview.classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
-}
 </script>
 {% endblock %}

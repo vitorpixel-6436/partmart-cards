@@ -1,100 +1,111 @@
 {% extends 'cards/base.html' %}
-{% load static %}
 
-{% block title %}Preview - {{ build.cpu }} - ПАРТМАРТ{% endblock %}
+{% block title %}Preview | {{ build }}{% endblock %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto">
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-4xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
-            👁 Preview сборки
-        </h1>
-        <a href="{% url 'cards:index' %}" class="steam-button-secondary">
-            ← Назад
-        </a>
+    <!-- Header -->
+    <div class="glass-panel rounded-3xl p-8 mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-4xl font-bold mb-2">{{ build.cpu }}</h1>
+                <p class="text-gray-400">{{ build.get_style_display }} • Создано {{ build.created_at|date:"d.m.Y" }}</p>
+            </div>
+            <div class="text-5xl font-bold text-green-400">{{ build.price }}₽</div>
+        </div>
     </div>
     
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Информация о сборке -->
-        <div class="glass-panel p-8 rounded-2xl">
-            <h2 class="text-2xl font-bold mb-6">💻 Информация о сборке</h2>
-            
-            <!-- Фото -->
-            {% if build.photo %}
-            <div class="mb-6">
-                <img src="{{ build.photo.url }}" alt="PC" class="w-full h-64 object-cover rounded-xl">
-            </div>
-            {% endif %}
-            
-            <!-- Характеристики -->
-            <div class="space-y-4">
-                {% for label, value in build.get_specs_list %}
-                <div class="glass-card p-4 rounded-xl">
-                    <div class="text-sm text-gray-400 mb-1">{{ label }}</div>
-                    <div class="font-bold">{{ value }}</div>
-                </div>
-                {% endfor %}
-            </div>
-            
-            <!-- Цена -->
-            <div class="glass-card p-6 rounded-xl mt-6 text-center">
-                <div class="text-sm text-gray-400 mb-2">💰 Цена</div>
-                <div class="text-4xl font-bold text-red-500">{{ build.price }} ₽</div>
-            </div>
-            
-            <!-- Бонусы -->
-            {% if build.bonuses %}
-            <div class="glass-card p-4 rounded-xl mt-4">
-                <div class="text-sm text-gray-400 mb-2">🎁 Бонусы</div>
-                <div class="text-sm whitespace-pre-line">{{ build.bonuses }}</div>
-            </div>
-            {% endif %}
-            
-            <!-- Стиль -->
-            <div class="glass-card p-4 rounded-xl mt-4 text-center">
-                <div class="text-sm text-gray-400 mb-2">🎨 Стиль карточки</div>
-                <div class="text-2xl font-bold">{{ build.get_style_display }}</div>
-            </div>
-        </div>
-        
-        <!-- Генерация и preview -->
-        <div class="glass-panel p-8 rounded-2xl">
-            <h2 class="text-2xl font-bold mb-6">✨ Генерация карточки</h2>
-            
+        <!-- Preview Section -->
+        <div class="space-y-6">
+            <!-- Generated Card -->
             {% if build.generated_card %}
-                <!-- Сгенерированная карточка -->
-                <div class="mb-6">
-                    <img src="{{ build.generated_card.url }}" alt="Generated Card" class="w-full rounded-xl border-2 border-red-500 shadow-xl shadow-red-500/20">
-                </div>
-                
-                <div class="space-y-4">
-                    <a href="{% url 'cards:download' build.pk %}" class="block steam-button text-center">
-                        💾 Скачать PNG (1200x1200)
+            <div class="glass-panel rounded-2xl p-6">
+                <h3 class="text-2xl font-bold mb-4">✨ Сгенерированная карточка</h3>
+                <img src="{{ build.generated_card.url }}" alt="Card" class="rounded-xl w-full">
+                <div class="mt-4 flex space-x-3">
+                    <a href="{% url 'cards:download' build.pk %}" 
+                       class="spotify-btn flex-1 py-3 rounded-xl text-center font-bold">
+                        ⬇️ Скачать PNG
                     </a>
-                    
-                    <a href="{% url 'cards:generate' build.pk %}" class="block steam-button-secondary text-center">
+                    <a href="{% url 'cards:generate' build.pk %}"
+                       class="glass-light px-6 py-3 rounded-xl font-bold">
                         🔄 Перегенерировать
                     </a>
                 </div>
+            </div>
             {% else %}
-                <!-- Карточка ещё не сгенерирована -->
-                <div class="glass-card p-12 rounded-xl text-center mb-6">
-                    <div class="text-6xl mb-4">🔨</div>
-                    <p class="text-xl text-gray-400 mb-4">Карточка ещё не сгенерирована</p>
-                    <p class="text-sm text-gray-500">Нажмите кнопку ниже для генерации</p>
+            <!-- Original Photo -->
+            <div class="glass-panel rounded-2xl p-6">
+                <h3 class="text-2xl font-bold mb-4">📸 Фото ПК</h3>
+                <img src="{{ build.photo.url }}" alt="PC" class="rounded-xl w-full">
+                <div class="mt-4">
+                    <a href="{% url 'cards:generate' build.pk %}" 
+                       class="msi-btn w-full py-4 rounded-xl text-center font-bold text-xl block">
+                        🎨 Сгенерировать карточку
+                    </a>
                 </div>
-                
-                <a href="{% url 'cards:generate' build.pk %}" class="block steam-button text-center text-xl py-4">
-                    ✨ Сгенерировать карточку
-                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Specs Section -->
+        <div class="space-y-6">
+            <!-- Main Specs -->
+            <div class="glass-panel rounded-2xl p-6">
+                <h3 class="text-2xl font-bold mb-4">⚙️ Характеристики</h3>
+                <div class="space-y-3">
+                    {% for label, value in build.get_specs_list %}
+                    <div class="glass-dark rounded-xl p-4">
+                        <div class="text-sm text-gray-400 mb-1">{{ label }}</div>
+                        <div class="font-bold">{{ value }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Style Info -->
+            <div class="glass-panel rounded-2xl p-6">
+                <h3 class="text-2xl font-bold mb-4">🎨 Стиль</h3>
+                <div class="glass-dark rounded-xl p-6 text-center">
+                    <div class="text-5xl mb-3">
+                        {% if build.style == 'msi' %}🔴
+                        {% elif build.style == 'steam' %}🎮
+                        {% elif build.style == 'apple' %}🍎
+                        {% elif build.style == 'spotify' %}🎵
+                        {% endif %}
+                    </div>
+                    <div class="text-2xl font-bold">{{ build.get_style_display }}</div>
+                </div>
+            </div>
+            
+            <!-- Bonuses -->
+            {% if build.bonuses %}
+            <div class="glass-panel rounded-2xl p-6">
+                <h3 class="text-2xl font-bold mb-4">🎁 Бонусы</h3>
+                <div class="glass-dark rounded-xl p-4">
+                    <pre class="text-green-400 whitespace-pre-wrap">{{ build.bonuses }}</pre>
+                </div>
+            </div>
             {% endif %}
             
-            <!-- Инфо -->
-            <div class="glass-card p-4 rounded-xl mt-6">
-                <p class="text-sm text-gray-400">
-                    💡 <strong>Совет:</strong> Карточка будет сгенерирована в формате 1200x1200px,
-                    идеальном для загрузки на Авито.
-                </p>
+            <!-- Actions -->
+            <div class="glass-panel rounded-2xl p-6">
+                <h3 class="text-2xl font-bold mb-4">🔧 Действия</h3>
+                <div class="space-y-3">
+                    <a href="{% url 'cards:index' %}" 
+                       class="glass-light w-full py-3 rounded-xl text-center font-bold block hover:bg-blue-500/20">
+                        🏠 На главную
+                    </a>
+                    <a href="{% url 'cards:gallery' %}" 
+                       class="glass-light w-full py-3 rounded-xl text-center font-bold block hover:bg-blue-500/20">
+                        🖼 Галерея
+                    </a>
+                    <a href="{% url 'cards:create' %}" 
+                       class="steam-btn w-full py-3 rounded-xl text-center font-bold block">
+                        ➕ Создать новую
+                    </a>
+                </div>
             </div>
         </div>
     </div>

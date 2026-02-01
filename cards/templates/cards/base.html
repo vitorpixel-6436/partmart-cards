@@ -8,29 +8,125 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Custom Liquid Glass CSS -->
-    <link rel="stylesheet" href="{% static 'css/glass-liquid.css' %}">
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <!-- Custom CSS -->
+    <style>
+        /* Apple Liquid Glass Effects */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        
+        .glass-light {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Smooth Transitions */
+        * {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Hover Effects */
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+        }
+        
+        .hover-glow:hover {
+            box-shadow: 0 0 20px rgba(30, 215, 96, 0.5);
+        }
+        
+        /* Gradient Background */
+        body {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Steam Button Style */
+        .steam-btn {
+            background: linear-gradient(90deg, #1e88e5 0%, #1565c0 100%);
+            box-shadow: 0 4px 15px rgba(30, 136, 229, 0.4);
+        }
+        
+        .steam-btn:hover {
+            background: linear-gradient(90deg, #2196f3 0%, #1e88e5 100%);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+        }
+        
+        /* MSI Red Button */
+        .msi-btn {
+            background: linear-gradient(90deg, #e30613 0%, #b30510 100%);
+            box-shadow: 0 4px 15px rgba(227, 6, 19, 0.4);
+        }
+        
+        .msi-btn:hover {
+            background: linear-gradient(90deg, #ff0716 0%, #e30613 100%);
+            box-shadow: 0 6px 20px rgba(255, 7, 22, 0.6);
+        }
+        
+        /* Spotify Green */
+        .spotify-btn {
+            background: linear-gradient(90deg, #1db954 0%, #1ed760 100%);
+            box-shadow: 0 4px 15px rgba(30, 215, 96, 0.4);
+        }
+        
+        .spotify-btn:hover {
+            background: linear-gradient(90deg, #1ed760 0%, #1db954 100%);
+            box-shadow: 0 6px 20px rgba(30, 215, 96, 0.6);
+        }
+    </style>
     
-    {% load static %}
+    {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-gradient-to-br from-black via-gray-900 to-black min-h-screen text-white">
-    
+<body class="text-gray-100">
     <!-- Navigation -->
-    <nav class="glass-panel sticky top-0 z-50 backdrop-blur-xl">
+    <nav class="glass-panel sticky top-0 z-50">
         <div class="container mx-auto px-6 py-4">
             <div class="flex items-center justify-between">
-                <a href="{% url 'cards:index' %}" class="text-2xl font-bold bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent">
-                    👾 ПАРТМАРТ
+                <!-- Logo -->
+                <a href="{% url 'cards:index' %}" class="flex items-center space-x-3">
+                    <div class="text-3xl font-bold bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">
+                        🎮 ПАРТМАРТ
+                    </div>
                 </a>
                 
-                <div class="flex gap-4">
-                    <a href="{% url 'cards:create' %}" class="steam-button">
-                        ➕ Создать карточку
-                    </a>
-                    <a href="{% url 'cards:gallery' %}" class="steam-button-secondary">
-                        🖼 Галерея
-                    </a>
+                <!-- Menu -->
+                <div class="flex items-center space-x-6">
+                    <a href="{% url 'cards:index' %}" class="hover:text-blue-400">Главная</a>
+                    <a href="{% url 'cards:create' %}" class="hover:text-blue-400">Создать</a>
+                    <a href="{% url 'cards:gallery' %}" class="hover:text-blue-400">Галерея</a>
+                    <a href="{% url 'cards:presets' %}" class="hover:text-blue-400">Пресеты</a>
                 </div>
             </div>
         </div>
@@ -38,32 +134,41 @@
     
     <!-- Messages -->
     {% if messages %}
-    <div class="container mx-auto px-6 py-4">
+    <div class="container mx-auto px-6 mt-6">
         {% for message in messages %}
-        <div class="glass-panel mb-4 p-4 rounded-xl {% if message.tags == 'error' %}border-2 border-red-500{% elif message.tags == 'success' %}border-2 border-green-500{% endif %}">
-            {{ message }}
+        <div class="glass-panel p-4 rounded-2xl mb-4 {% if message.tags %}message-{{ message.tags }}{% endif %}">
+            <div class="flex items-center space-x-3">
+                {% if 'success' in message.tags %}
+                <span class="text-2xl">✅</span>
+                {% elif 'error' in message.tags %}
+                <span class="text-2xl">❌</span>
+                {% else %}
+                <span class="text-2xl">ℹ️</span>
+                {% endif %}
+                <span>{{ message }}</span>
+            </div>
         </div>
         {% endfor %}
     </div>
     {% endif %}
     
     <!-- Main Content -->
-    <main class="container mx-auto px-6 py-8">
-        {% block content %}
-        {% endblock %}
+    <main class="container mx-auto px-6 py-12">
+        {% block content %}{% endblock %}
     </main>
     
     <!-- Footer -->
-    <footer class="glass-panel mt-20 py-8">
-        <div class="container mx-auto px-6 text-center text-gray-400">
-            <p>🎨 ПАРТМАРТ Cards Generator © 2026</p>
-            <p class="text-sm mt-2">Premium карточки для продажи компьютеров на Авито</p>
+    <footer class="glass-panel mt-20">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p class="text-gray-400">
+                © 2026 ПАРТМАРТ Cards Generator | Powered by Django + Pillow
+            </p>
+            <p class="text-sm text-gray-500 mt-2">
+                🎨 4 Premium Styles: MSI Gaming • Steam Library • Apple Premium • Spotify Minimal
+            </p>
         </div>
     </footer>
     
-    <!-- Custom JS -->
-    <script src="{% static 'js/card-generator.js' %}"></script>
     {% block extra_js %}{% endblock %}
-    
 </body>
 </html>
