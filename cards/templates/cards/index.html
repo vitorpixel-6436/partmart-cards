@@ -1,122 +1,234 @@
-{% extends 'cards/base.html' %}
+{% extends 'cards/base_steam.html' %}
 
-{% block title %}Главная | ПАРТМАРТ Cards{% endblock %}
+{% block title %}Главная | ПАРТМАРТ Cards Generator{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<div class="glass-panel rounded-3xl p-12 mb-12 text-center hover-lift">
-    <h1 class="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-        ПАРТМАРТ Cards Generator
-    </h1>
-    <p class="text-2xl text-gray-300 mb-8">
-        Создавайте профессиональные карточки продажи ПК для Авито
-    </p>
-    <div class="flex justify-center space-x-4">
-        <a href="{% url 'cards:create' %}" class="steam-btn px-8 py-4 rounded-xl text-white font-bold text-lg">
-            🚀 Создать карточку
-        </a>
-        <a href="{% url 'cards:gallery' %}" class="glass-light px-8 py-4 rounded-xl font-bold text-lg hover-glow">
-            🖼 Галерея
-        </a>
-    </div>
-</div>
-
-<!-- Features Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-    <!-- MSI Style -->
-    <div class="glass-panel rounded-2xl p-6 hover-lift">
-        <div class="text-4xl mb-3">🔴</div>
-        <h3 class="text-xl font-bold mb-2 text-red-500">MSI Gaming</h3>
-        <p class="text-gray-400 text-sm">
-            Агрессивный красно-чёрный дизайн с RGB эффектами
+<!-- Hero Banner -->
+<div class="relative overflow-hidden rounded-3xl mb-12 mixpc-gradient">
+    <div class="glass-liquid p-16 text-center">
+        <h1 class="text-7xl font-black mb-6 shimmer">
+            <span class="bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
+                ПАРТМАРТ Cards
+            </span>
+        </h1>
+        <p class="text-3xl text-gray-200 mb-8 font-light">
+            Профессиональные карточки для Авито за минуту
         </p>
-    </div>
-    
-    <!-- Steam Style -->
-    <div class="glass-panel rounded-2xl p-6 hover-lift">
-        <div class="text-4xl mb-3">🎮</div>
-        <h3 class="text-xl font-bold mb-2 text-blue-400">Steam Library</h3>
-        <p class="text-gray-400 text-sm">
-            Glass morphism эффекты и размытый фон
-        </p>
-    </div>
-    
-    <!-- Apple Style -->
-    <div class="glass-panel rounded-2xl p-6 hover-lift">
-        <div class="text-4xl mb-3">🍎</div>
-        <h3 class="text-xl font-bold mb-2 text-gray-300">Apple Premium</h3>
-        <p class="text-gray-400 text-sm">
-            Минималистичный liquid glass дизайн
-        </p>
-    </div>
-    
-    <!-- Spotify Style -->
-    <div class="glass-panel rounded-2xl p-6 hover-lift">
-        <div class="text-4xl mb-3">🎵</div>
-        <h3 class="text-xl font-bold mb-2 text-green-400">Spotify Minimal</h3>
-        <p class="text-gray-400 text-sm">
-            Ультра-чистый дизайн с акцентами
-        </p>
-    </div>
-</div>
-
-<!-- Stats -->
-<div class="glass-dark rounded-2xl p-8 mb-12">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-        <div>
-            <div class="text-5xl font-bold text-blue-400 mb-2">{{ total_builds }}</div>
-            <div class="text-gray-400">Создано карточек</div>
-        </div>
-        <div>
-            <div class="text-5xl font-bold text-green-400 mb-2">4</div>
-            <div class="text-gray-400">Премиум стиля</div>
-        </div>
-        <div>
-            <div class="text-5xl font-bold text-purple-400 mb-2">1200×1200</div>
-            <div class="text-gray-400">Формат для Авито</div>
+        <div class="flex justify-center space-x-6">
+            <a href="{% url 'cards:create' %}" class="steam-btn px-10 py-5 rounded-xl text-white font-bold text-xl">
+                <i class="fas fa-magic mr-2"></i>Создать карточку
+            </a>
+            <a href="{% url 'cards:presets' %}" class="glass-card px-10 py-5 rounded-xl text-white font-bold text-xl border-2 border-white/30 hover:border-purple-400">
+                <i class="fas fa-bolt mr-2"></i>Пресеты
+            </a>
         </div>
     </div>
 </div>
 
-<!-- Recent Builds -->
-{% if recent_builds %}
-<div class="mb-12">
-    <h2 class="text-3xl font-bold mb-6">Последние карточки</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for build in recent_builds %}
-        <a href="{% url 'cards:preview' build.pk %}" class="glass-panel rounded-2xl p-4 hover-lift block">
-            {% if build.generated_card %}
-            <img src="{{ build.generated_card.url }}" alt="{{ build }}" class="rounded-xl w-full mb-4">
-            {% elif build.photo %}
-            <img src="{{ build.photo.url }}" alt="{{ build }}" class="rounded-xl w-full mb-4">
-            {% endif %}
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="font-bold text-lg">{{ build.price }}₽</div>
-                    <div class="text-sm text-gray-400">{{ build.get_style_display }}</div>
+<!-- Style Carousel -->
+<div class="mb-16">
+    <h2 class="text-4xl font-bold mb-8 text-center">
+        <i class="fas fa-palette mr-3 text-purple-400"></i>
+        Выберите стиль
+    </h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- MSI Gaming -->
+        <a href="{% url 'cards:create' %}?style=msi" class="glass-card rounded-2xl overflow-hidden group card-3d">
+            <div class="card-inner">
+                <div class="aspect-video bg-gradient-to-br from-red-900 to-black flex items-center justify-center text-6xl">
+                    🔴
                 </div>
-                <div class="text-2xl">
-                    {% if build.style == 'msi' %}🔴
-                    {% elif build.style == 'steam' %}🎮
-                    {% elif build.style == 'apple' %}🍎
-                    {% elif build.style == 'spotify' %}🎵
-                    {% endif %}
+                <div class="p-6">
+                    <h3 class="text-2xl font-bold mb-2 text-red-400">MSI Gaming</h3>
+                    <p class="text-gray-400">Агрессивный игровой стиль с красными акцентами</p>
+                    <div class="mt-4 flex items-center text-sm text-gray-500">
+                        <span class="mr-4"><i class="fas fa-fire mr-1"></i>Популярно</span>
+                        <span><i class="fas fa-gamepad mr-1"></i>Gaming</span>
+                    </div>
                 </div>
             </div>
         </a>
+        
+        <!-- Steam Library -->
+        <a href="{% url 'cards:create' %}?style=steam" class="glass-card rounded-2xl overflow-hidden group card-3d">
+            <div class="card-inner">
+                <div class="aspect-video bg-gradient-to-br from-blue-900 to-gray-900 flex items-center justify-center text-6xl">
+                    🎮
+                </div>
+                <div class="p-6">
+                    <h3 class="text-2xl font-bold mb-2 text-blue-400">Steam Library</h3>
+                    <p class="text-gray-400">Стиль платформы Steam с тёмным фоном</p>
+                    <div class="mt-4 flex items-center text-sm text-gray-500">
+                        <span class="mr-4"><i class="fas fa-star mr-1"></i>Рекомендуем</span>
+                        <span><i class="fas fa-desktop mr-1"></i>PC</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <!-- Apple Premium -->
+        <a href="{% url 'cards:create' %}?style=apple" class="glass-card rounded-2xl overflow-hidden group card-3d">
+            <div class="card-inner">
+                <div class="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center text-6xl">
+                    🍎
+                </div>
+                <div class="p-6">
+                    <h3 class="text-2xl font-bold mb-2 text-gray-300">Apple Premium</h3>
+                    <p class="text-gray-400">Минималистичный премиум дизайн</p>
+                    <div class="mt-4 flex items-center text-sm text-gray-500">
+                        <span class="mr-4"><i class="fas fa-gem mr-1"></i>Premium</span>
+                        <span><i class="fas fa-laptop mr-1"></i>Minimal</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <!-- Spotify Minimal -->
+        <a href="{% url 'cards:create' %}?style=spotify" class="glass-card rounded-2xl overflow-hidden group card-3d">
+            <div class="card-inner">
+                <div class="aspect-video bg-gradient-to-br from-green-900 to-black flex items-center justify-center text-6xl">
+                    🎵
+                </div>
+                <div class="p-6">
+                    <h3 class="text-2xl font-bold mb-2 text-green-400">Spotify Minimal</h3>
+                    <p class="text-gray-400">Чистый стиль с зелёными акцентами</p>
+                    <div class="mt-4 flex items-center text-sm text-gray-500">
+                        <span class="mr-4"><i class="fas fa-music mr-1"></i>Music</span>
+                        <span><i class="fas fa-circle mr-1"></i>Clean</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <!-- MIXPC Series - FEATURED -->
+        <a href="{% url 'cards:mixpc_gallery' %}" class="glass-card rounded-2xl overflow-hidden group card-3d border-2 border-purple-500 glow-purple relative">
+            <div class="absolute top-4 right-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold pulse-glow">
+                NEW!
+            </div>
+            <div class="card-inner">
+                <div class="aspect-video bg-gradient-to-br from-purple-900 via-pink-900 to-purple-900 flex items-center justify-center text-6xl">
+                    💜
+                </div>
+                <div class="p-6">
+                    <h3 class="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                        MIXPC Series
+                    </h3>
+                    <p class="text-gray-400">Серия из 6 карточек для Авито</p>
+                    <div class="mt-4 flex items-center text-sm text-gray-500">
+                        <span class="mr-4"><i class="fas fa-layer-group mr-1"></i>6 карточек</span>
+                        <span><i class="fas fa-certificate mr-1"></i>Pro</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <!-- Custom Style -->
+        <a href="{% url 'cards:create' %}" class="glass-card rounded-2xl overflow-hidden group card-3d border-2 border-dashed border-gray-600 hover:border-white">
+            <div class="card-inner">
+                <div class="aspect-video bg-gradient-to-br from-gray-900 to-black flex items-center justify-center text-6xl">
+                    ✨
+                </div>
+                <div class="p-6">
+                    <h3 class="text-2xl font-bold mb-2 text-gray-300">Custom Style</h3>
+                    <p class="text-gray-400">Создайте свой уникальный дизайн</p>
+                    <div class="mt-4 flex items-center text-sm text-gray-500">
+                        <span class="mr-4"><i class="fas fa-wand-magic-sparkles mr-1"></i>Кастом</span>
+                        <span><i class="fas fa-sliders mr-1"></i>Flex</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Features -->
+<div class="glass-panel rounded-3xl p-12 mb-12">
+    <h2 class="text-4xl font-bold mb-12 text-center">
+        <i class="fas fa-rocket mr-3 text-pink-400"></i>
+        Преимущества
+    </h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="text-center">
+            <div class="text-6xl mb-4">⚡</div>
+            <h4 class="text-xl font-bold mb-2 text-purple-300">Быстро</h4>
+            <p class="text-gray-400">Генерация за 1-2 минуты</p>
+        </div>
+        
+        <div class="text-center">
+            <div class="text-6xl mb-4">🎨</div>
+            <h4 class="text-xl font-bold mb-2 text-pink-300">Красиво</h4>
+            <p class="text-gray-400">5 профессиональных стилей</p>
+        </div>
+        
+        <div class="text-center">
+            <div class="text-6xl mb-4">📱</div>
+            <h4 class="text-xl font-bold mb-2 text-purple-300">Адаптивно</h4>
+            <p class="text-gray-400">Размеры для всех платформ</p>
+        </div>
+        
+        <div class="text-center">
+            <div class="text-6xl mb-4">🎯</div>
+            <h4 class="text-xl font-bold mb-2 text-pink-300">Точно</h4>
+            <p class="text-gray-400">Автоматическая коррекция</p>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Cards -->
+{% if recent_cards %}
+<div class="mb-12">
+    <div class="flex items-center justify-between mb-8">
+        <h2 class="text-4xl font-bold">
+            <i class="fas fa-clock mr-3 text-purple-400"></i>
+            Недавние карточки
+        </h2>
+        <a href="{% url 'cards:gallery' %}" class="text-pink-400 hover:text-pink-300 font-semibold">
+            Все карточки <i class="fas fa-arrow-right ml-2"></i>
+        </a>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for card in recent_cards %}
+        <div class="glass-card rounded-2xl overflow-hidden group card-3d">
+            <div class="card-inner">
+                <div class="aspect-video bg-gradient-to-br from-purple-900 to-pink-900 overflow-hidden">
+                    {% if card.image %}
+                    <img src="{{ card.image.url }}" alt="{{ card.build.name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-6xl">🖥️</div>
+                    {% endif %}
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2 text-purple-300">{{ card.build.name }}</h3>
+                    <p class="text-sm text-gray-400 mb-4">{{ card.build.cpu }} + {{ card.build.gpu }}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-500">
+                            <i class="fas fa-calendar mr-1"></i>{{ card.created_at|date:"d.m.Y" }}
+                        </span>
+                        <a href="{{ card.image.url }}" download class="text-pink-400 hover:text-pink-300 text-sm font-semibold">
+                            <i class="fas fa-download mr-1"></i>Скачать
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
         {% endfor %}
     </div>
 </div>
 {% endif %}
 
 <!-- CTA Section -->
-<div class="glass-panel rounded-3xl p-12 text-center">
-    <h2 class="text-4xl font-bold mb-4">Готовы начать?</h2>
+<div class="glass-card rounded-3xl p-16 text-center shimmer glow-purple">
+    <h2 class="text-5xl font-bold mb-6">
+        Готовы создать свою первую карточку?
+    </h2>
     <p class="text-xl text-gray-300 mb-8">
-        Создайте свою первую профессиональную карточку прямо сейчас!
+        Профессиональные карточки для Авито за минуту
     </p>
-    <a href="{% url 'cards:create' %}" class="spotify-btn px-10 py-5 rounded-xl text-white font-bold text-xl inline-block">
-        🎨 Создать карточку
+    <a href="{% url 'cards:create' %}" class="steam-btn px-12 py-6 rounded-xl text-white font-bold text-2xl inline-block pulse-glow">
+        <i class="fas fa-magic mr-3"></i>Создать сейчас
     </a>
 </div>
 {% endblock %}
