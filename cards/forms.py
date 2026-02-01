@@ -1,22 +1,13 @@
 from django import forms
-from .models import PCBuild, PCBuildPreset
+from .models import PCBuild, Preset
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Fieldset, Submit, Div, HTML
 
 
 class PCBuildForm(forms.ModelForm):
     """
-    Форма для создания карточки ПК
+    Форма для создания/редактирования сборки ПК
     """
-    
-    preset = forms.ModelChoiceField(
-        queryset=PCBuildPreset.objects.all(),
-        required=False,
-        empty_label='Выберите пресет...',
-        widget=forms.Select(attrs={
-            'class': 'form-control glass-select',
-            'id': 'preset-select'
-        }),
-        label='Пресет конфигурации'
-    )
     
     class Meta:
         model = PCBuild
@@ -24,74 +15,55 @@ class PCBuildForm(forms.ModelForm):
             'photo', 'cpu', 'gpu', 'ram', 'storage',
             'motherboard', 'psu', 'case', 'price', 'bonuses', 'style'
         ]
-        
         widgets = {
             'photo': forms.FileInput(attrs={
-                'class': 'form-control-file',
-                'id': 'photo-upload',
+                'class': 'form-control',
                 'accept': 'image/*'
             }),
             'cpu': forms.TextInput(attrs={
-                'class': 'form-control glass-input',
-                'placeholder': 'Например: Intel Core i5-12400F'
+                'class': 'form-control',
+                'placeholder': 'Intel Core i5-12400F / AMD Ryzen 5 5600X'
             }),
             'gpu': forms.TextInput(attrs={
-                'class': 'form-control glass-input',
-                'placeholder': 'Например: NVIDIA RTX 3060 Ti 8GB'
+                'class': 'form-control',
+                'placeholder': 'NVIDIA RTX 3060 Ti 8GB / AMD RX 6700 XT'
             }),
             'ram': forms.TextInput(attrs={
-                'class': 'form-control glass-input',
-                'placeholder': 'Например: 16GB DDR4 3200MHz'
+                'class': 'form-control',
+                'placeholder': '16GB DDR4 3200MHz'
             }),
             'storage': forms.TextInput(attrs={
-                'class': 'form-control glass-input',
-                'placeholder': 'Например: SSD 512GB NVMe'
+                'class': 'form-control',
+                'placeholder': '512GB NVMe SSD + 1TB HDD'
             }),
             'motherboard': forms.TextInput(attrs={
-                'class': 'form-control glass-input',
-                'placeholder': 'Например: ASUS B660M-PLUS (опционально)'
+                'class': 'form-control',
+                'placeholder': 'ASUS B660M-PLUS'
             }),
             'psu': forms.TextInput(attrs={
-                'class': 'form-control glass-input',
-                'placeholder': 'Например: 650W 80+ Bronze (опционально)'
+                'class': 'form-control',
+                'placeholder': '650W 80+ Bronze'
             }),
             'case': forms.TextInput(attrs={
-                'class': 'form-control glass-input',
-                'placeholder': 'Например: DeepCool CC560 (опционально)'
+                'class': 'form-control',
+                'placeholder': 'DeepCool MATREXX 55'
             }),
             'price': forms.NumberInput(attrs={
-                'class': 'form-control glass-input',
-                'placeholder': '50000',
-                'step': '100'
+                'class': 'form-control',
+                'placeholder': '45000'
             }),
             'bonuses': forms.Textarea(attrs={
-                'class': 'form-control glass-input',
-                'placeholder': 'Windows 11 Pro + Microsoft Office в подарок!',
-                'rows': 3
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Windows 11 + Office в подарок!\nГарантия 1 год'
             }),
             'style': forms.RadioSelect(attrs={
-                'class': 'style-radio'
+                'class': 'form-check-input'
             })
         }
-
-
-class PCBuildPresetForm(forms.ModelForm):
-    """
-    Форма для создания пресета
-    """
-    class Meta:
-        model = PCBuildPreset
-        fields = '__all__'
-        
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control glass-input'}),
-            'description': forms.Textarea(attrs={'class': 'form-control glass-input', 'rows': 2}),
-            'cpu': forms.TextInput(attrs={'class': 'form-control glass-input'}),
-            'gpu': forms.TextInput(attrs={'class': 'form-control glass-input'}),
-            'ram': forms.TextInput(attrs={'class': 'form-control glass-input'}),
-            'storage': forms.TextInput(attrs={'class': 'form-control glass-input'}),
-            'motherboard': forms.TextInput(attrs={'class': 'form-control glass-input'}),
-            'psu': forms.TextInput(attrs={'class': 'form-control glass-input'}),
-            'case': forms.TextInput(attrs={'class': 'form-control glass-input'}),
-            'bonuses': forms.Textarea(attrs={'class': 'form-control glass-input', 'rows': 3}),
-        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = 'glass-panel'
