@@ -9,7 +9,7 @@ import os
 
 def index(request):
     """
-    Главная страница
+    Главная страница с последними сборками
     """
     recent_builds = PCBuild.objects.all()[:6]
     context = {
@@ -26,9 +26,9 @@ def create_card(request):
     if request.method == 'POST':
         form = PCBuildForm(request.POST, request.FILES)
         if form.is_valid():
-            pc_build = form.save()
-            messages.success(request, '✅ Сборка создана! Теперь можно сгенерировать карточку.')
-            return redirect('cards:preview', pk=pc_build.pk)
+            build = form.save()
+            messages.success(request, '✅ Сборка создана! Теперь сгенерируйте карточку.')
+            return redirect('cards:preview', pk=build.pk)
     else:
         form = PCBuildForm()
     
@@ -42,33 +42,32 @@ def create_card(request):
 
 def preview_card(request, pk):
     """
-    Превью карточки перед генерацией
+    Preview карточки перед генерацией
     """
-    pc_build = get_object_or_404(PCBuild, pk=pk)
+    build = get_object_or_404(PCBuild, pk=pk)
     context = {
-        'pc_build': pc_build,
+        'build': build,
     }
     return render(request, 'cards/preview.html', context)
 
 
 def generate_card(request, pk):
     """
-    Генерация карточки
+    Генерация карточки с выбранным стилем
     """
-    pc_build = get_object_or_404(PCBuild, pk=pk)
+    build = get_object_or_404(PCBuild, pk=pk)
     
     try:
-        # Создаем генератор и генерируем карточку
-        generator = CardGenerator(pc_build)
-        card_path = generator.generate()
+        generator = CardGenerator(build)
+        generated_path = generator.generate()
         
         # Сохраняем путь к сгенерированной карточке
-        pc_build.generated_card = card_path
-        pc_build.save()
+        build.generated_card = generated_path
+        build.save()
         
-        messages.success(request, '🎉 Карточка успешно сгенерирована!')
+        messages.success(request, f'🎉 Карточка сгенерирована в стиле {build.get_style_display()}!')
     except Exception as e:
-        messages.error(request, f'❌ Ошибка при генерации: {str(e)}')
+        messages.error(request, f'❌ Ошибка генерации: {str(e)}')
     
     return redirect('cards:preview', pk=pk)
 
@@ -77,19 +76,19 @@ def download_card(request, pk):
     """
     Скачивание сгенерированной карточки
     """
-    pc_build = get_object_or_404(PCBuild, pk=pk)
+    build = get_object_or_404(PCBuild, pk=pk)
     
-    if not pc_build.generated_card:
-        messages.error(request, 'Сначала сгенерируйте карточку!')
+    if not build.generated_card:
+        messages.error(request, '❌ Сначала сгенерируйте карточку!')
         return redirect('cards:preview', pk=pk)
     
-    file_path = pc_build.generated_card.path
+    file_path = build.generated_card.path
     if os.path.exists(file_path):
         response = FileResponse(open(file_path, 'rb'), content_type='image/png')
-        response['Content-Disposition'] = f'attachment; filename="partmart_{pc_build.pk}.png"'
+        response['Content-Disposition'] = f'attachment; filename="partmart_{build.pk}.png"'
         return response
     else:
-        messages.error(request, 'Файл не найден!')
+        messages.error(request, '❌ Файл карточки не найден!')
         return redirect('cards:preview', pk=pk)
 
 
@@ -97,7 +96,7 @@ def gallery(request):
     """
     Галерея всех созданных карточек
     """
-    builds = PCBuild.objects.all()
+    builds = PCBuild.objects.filter(generated_card__isnull=False)
     context = {
         'builds': builds,
     }

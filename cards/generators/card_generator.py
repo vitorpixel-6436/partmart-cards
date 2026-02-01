@@ -1,4 +1,4 @@
-from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
+from PIL import Image
 import os
 from django.conf import settings
 from .msi_style import MSIStyleGenerator
@@ -9,55 +9,44 @@ from .spotify_style import SpotifyStyleGenerator
 
 class CardGenerator:
     """
-    Главный генератор карточек - выбирает нужный стиль
+    Главный класс для генерации карточек в разных стилях
     """
     
-    CANVAS_SIZE = (1200, 1200)
+    GENERATORS = {
+        'msi': MSIStyleGenerator,
+        'steam': SteamStyleGenerator,
+        'apple': AppleStyleGenerator,
+        'spotify': SpotifyStyleGenerator,
+    }
     
     def __init__(self, pc_build):
-        self.pc_build = pc_build
-        self.style_generators = {
-            'msi': MSIStyleGenerator,
-            'steam': SteamStyleGenerator,
-            'apple': AppleStyleGenerator,
-            'spotify': SpotifyStyleGenerator,
-        }
-    
+        self.build = pc_build
+        self.style = pc_build.style
+        
     def generate(self):
         """
-        Генерирует карточку в выбранном стиле
+        Генерирует карточку выбранного стиля
         """
-        generator_class = self.style_generators.get(self.pc_build.style, MSIStyleGenerator)
-        generator = generator_class(self.pc_build)
-        return generator.generate()
+        generator_class = self.GENERATORS.get(self.style)
+        if not generator_class:
+            raise ValueError(f"Неизвестный стиль: {self.style}")
+        
+        generator = generator_class(self.build)
+        output_path = self._get_output_path()
+        
+        # Генерируем изображение
+        img = generator.generate()
+        
+        # Сохраняем
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        img.save(output_path, 'PNG', quality=95, optimize=True)
+        
+        # Возвращаем относительный путь для Django
+        return os.path.relpath(output_path, settings.MEDIA_ROOT)
     
-    @staticmethod
-    def get_font(size, bold=False):
+    def _get_output_path(self):
         """
-        Получить шрифт нужного размера
+        Генерирует путь для сохранения карточки
         """
-        try:
-            if bold:
-                return ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size)
-            return ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", size)
-        except:
-            # Fallback для Windows
-            try:
-                if bold:
-                    return ImageFont.truetype("arial.ttf", size)
-                return ImageFont.truetype("arial.ttf", size)
-            except:
-                return ImageFont.load_default()
-    
-    @staticmethod
-    def add_rounded_rectangle(draw, xy, radius, fill, outline=None, width=1):
-        """
-        Рисует скругленный прямоугольник
-        """
-        x1, y1, x2, y2 = xy
-        draw.rectangle([x1 + radius, y1, x2 - radius, y2], fill=fill, outline=outline, width=width)
-        draw.rectangle([x1, y1 + radius, x2, y2 - radius], fill=fill, outline=outline, width=width)
-        draw.pieslice([x1, y1, x1 + radius * 2, y1 + radius * 2], 180, 270, fill=fill, outline=outline)
-        draw.pieslice([x2 - radius * 2, y1, x2, y1 + radius * 2], 270, 360, fill=fill, outline=outline)
-        draw.pieslice([x1, y2 - radius * 2, x1 + radius * 2, y2], 90, 180, fill=fill, outline=outline)
-        draw.pieslice([x2 - radius * 2, y2 - radius * 2, x2, y2], 0, 90, fill=fill, outline=outline)
+        filename = f"partmart_{self.build.pk}_{self.style}.png"
+        return os.path.join(settings.MEDIA_ROOT, 'generated', filename)

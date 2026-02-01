@@ -1,152 +1,214 @@
-from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
-import os
-from django.conf import settings
-from .card_generator import CardGenerator
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
+from .base_generator import BaseCardGenerator
 
 
-class SteamStyleGenerator:
+class SteamStyleGenerator(BaseCardGenerator):
     """
-    🎮 Steam Library Style Generator
-    Glass morphism эффекты и игровая эстетика
+    🎮 Steam Library Style - glass morphism эффекты
     """
     
-    # Цветовая палитра Steam
-    COLOR_DARK_BLUE = (27, 40, 56)
-    COLOR_STEAM_BLUE = (102, 192, 244)
-    COLOR_WHITE = (255, 255, 255)
-    COLOR_GLASS = (255, 255, 255, 40)
-    
-    def __init__(self, pc_build):
-        self.pc_build = pc_build
-        self.canvas_size = (1200, 1200)
+    # Steam цветовая палитра
+    STEAM_DARK_BLUE = (27, 40, 56)
+    STEAM_BLUE = (102, 192, 244)
+    STEAM_LIGHT = (193, 207, 217)
+    STEAM_GLASS = (255, 255, 255, 40)  # Полупрозрачный белый
     
     def generate(self):
         """
-        Генерирует карточку в Steam стиле
+        Генерирует карточку в стиле Steam Library
         """
-        # Создаем холст
-        img = Image.new('RGB', self.canvas_size, color=self.COLOR_DARK_BLUE)
+        # Создаем базовый градиентный фон
+        card = self.create_gradient(
+            direction='diagonal',
+            colors=[self.STEAM_DARK_BLUE, (15, 25, 35)]
+        )
         
-        # Загружаем фото
-        pc_photo = Image.open(self.pc_build.photo.path)
-        pc_photo = self._prepare_photo(pc_photo)
+        # Загружаем фото ПК
+        photo = self.load_and_prepare_photo((1000, 800))
         
-        # Размытие фона
-        background = pc_photo.copy()
-        background = background.filter(ImageFilter.GaussianBlur(radius=20))
-        enhancer = ImageEnhance.Brightness(background)
-        background = enhancer.enhance(0.4)
-        img.paste(background, (0, 0))
+        # Применяем размытие к фото для фона
+        photo_blur = photo.filter(ImageFilter.GaussianBlur(15))
         
-        # Фото ПК в центре сверху
-        photo_small = pc_photo.resize((900, 600), Image.Resampling.LANCZOS)
-        img.paste(photo_small, (150, 50))
+        # Затемняем размытое фото
+        enhancer = ImageEnhance.Brightness(photo_blur)
+        photo_blur = enhancer.enhance(0.4)
         
-        # Glass-панели с характеристиками
-        self._add_glass_specs(img)
+        # Размещаем размытое фото как фон
+        card_rgba = card.convert('RGBA')
+        photo_blur_rgba = photo_blur.convert('RGBA')
         
-        # Лого
-        draw = ImageDraw.Draw(img)
-        self._add_logo(draw)
+        # Центрируем фото
+        x_offset = (self.width - photo_blur.width) // 2
+        y_offset = 50
         
-        # Цена
-        self._add_price(draw)
+        # Создаем маску для плавного перехода
+        mask = Image.new('L', photo_blur.size, 200)
+        card_rgba.paste(photo_blur_rgba, (x_offset, y_offset), mask)
+        
+        card = card_rgba.convert('RGB')
+        
+        # Рисуем элементы поверх
+        draw = ImageDraw.Draw(card, 'RGBA')
+        
+        # Логотип ПАРТМАРТ
+        self._draw_logo(draw)
+        
+        # Главная карточка с фото в центре
+        self._draw_main_card(card, photo, x_offset, y_offset)
+        
+        # Glass панели с характеристиками
+        draw = ImageDraw.Draw(card, 'RGBA')
+        self._draw_specs_glass_panels(draw)
+        
+        # Цена в glass контейнере
+        self._draw_price_panel(draw)
         
         # Бонусы
-        if self.pc_build.bonuses:
-            self._add_bonuses(draw)
+        if self.build.bonuses:
+            self._draw_bonuses(draw)
         
-        return self._save_image(img)
+        return card
     
-    def _prepare_photo(self, photo):
-        """Подготавливает фото"""
-        aspect = photo.width / photo.height
-        new_width = 1200
-        new_height = int(new_width / aspect)
+    def _draw_logo(self, draw):
+        """
+        Рисует логотип ПАРТМАРТ
+        """
+        font = self.get_font(42, bold=True)
+        text = "ПАРТМАРТ"
         
-        if new_height < 800:
-            new_height = 800
-            new_width = int(new_height * aspect)
-        
-        photo = photo.resize((new_width, new_height), Image.Resampling.LANCZOS)
-        
-        # Центрируем
-        left = (new_width - 1200) // 2
-        top = (new_height - 800) // 2
-        photo = photo.crop((left, top, left + 1200, top + 800))
-        
-        return photo
-    
-    def _add_glass_specs(self, img):
-        """Добавляет glass-панели с характеристиками"""
-        overlay = Image.new('RGBA', self.canvas_size, (0, 0, 0, 0))
-        draw = ImageDraw.Draw(overlay)
-        
-        specs = self.pc_build.get_specs_list()
-        x_offset = 60
-        y_offset = 680
-        
-        font_label = CardGenerator.get_font(16, bold=True)
-        font_value = CardGenerator.get_font(20, bold=False)
-        
-        for label, value in specs:
-            # Glass-панель
-            CardGenerator.add_rounded_rectangle(
-                draw,
-                (x_offset, y_offset, x_offset + 1080, y_offset + 70),
-                radius=10,
-                fill=(255, 255, 255, 40),
-                outline=(102, 192, 244, 100),
-                width=2
-            )
-            
-            y_offset += 80
-        
-        img.paste(overlay, (0, 0), overlay)
-        
-        # Текст поверх glass
-        draw = ImageDraw.Draw(img)
-        y_offset = 690
-        
-        for label, value in specs:
-            draw.text((80, y_offset), label, font=font_label, fill=self.COLOR_STEAM_BLUE)
-            draw.text((80, y_offset + 25), value, font=font_value, fill=self.COLOR_WHITE)
-            y_offset += 80
-    
-    def _add_logo(self, draw):
-        """Лого ПАРТМАРТ"""
-        font = CardGenerator.get_font(42, bold=True)
-        draw.text((50, 30), "PARTMART", font=font, fill=self.COLOR_STEAM_BLUE)
-    
-    def _add_price(self, draw):
-        """Цена"""
-        price_font = CardGenerator.get_font(64, bold=True)
-        price_text = f"{int(self.pc_build.price):,}".replace(',', ' ') + " ₽"
-        
-        bbox = draw.textbbox((0, 0), price_text, font=price_font)
-        text_width = bbox[2] - bbox[0]
-        
-        x = 1200 - text_width - 60
+        x = 40
         y = 30
         
-        draw.text((x, y), price_text, font=price_font, fill=self.COLOR_STEAM_BLUE)
+        # Glass подложка
+        bbox = draw.textbbox((x, y), text, font=font)
+        padding = 15
+        self.draw_rounded_rectangle(
+            draw,
+            [bbox[0] - padding, bbox[1] - padding, 
+             bbox[2] + padding, bbox[3] + padding],
+            radius=12,
+            fill=self.STEAM_GLASS
+        )
+        
+        # Текст
+        draw.text((x, y), text, fill=self.STEAM_BLUE, font=font)
     
-    def _add_bonuses(self, draw):
-        """Бонусы"""
-        font = CardGenerator.get_font(16, bold=False)
-        lines = self.pc_build.bonuses.split('\n')[:2]
+    def _draw_main_card(self, card, photo, x_offset, y_offset):
+        """
+        Рисует главную карточку с фото
+        """
+        # Создаем glass эффект для фото
+        card_rgba = card.convert('RGBA')
         
-        y = 100
-        for line in lines:
-            draw.text((60, y), f"✨ {line.strip()}", font=font, fill=(255, 255, 255, 200))
-            y += 25
+        # Рамка вокруг фото
+        draw = ImageDraw.Draw(card_rgba, 'RGBA')
+        
+        border_padding = 20
+        self.draw_rounded_rectangle(
+            draw,
+            [x_offset - border_padding, y_offset - border_padding,
+             x_offset + photo.width + border_padding, 
+             y_offset + photo.height + border_padding],
+            radius=20,
+            fill=(255, 255, 255, 30),
+            outline=self.STEAM_BLUE,
+            width=3
+        )
+        
+        # Вставляем фото
+        photo_rgba = photo.convert('RGBA')
+        card_rgba.paste(photo_rgba, (x_offset, y_offset))
+        
+        card.paste(card_rgba.convert('RGB'))
     
-    def _save_image(self, img):
-        """Сохраняет изображение"""
-        filename = f"partmart_steam_{self.pc_build.pk}.png"
-        filepath = os.path.join(settings.MEDIA_ROOT, 'generated', filename)
+    def _draw_specs_glass_panels(self, draw):
+        """
+        Рисует характеристики в glass панелях
+        """
+        specs = self.build.get_specs_list()
         
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        img.save(filepath, 'PNG', quality=95, optimize=True)
+        # Размещаем в 2 колонки по 2 строки
+        y_start = 900
+        col_width = (self.width - 120) // 2
         
-        return os.path.join('generated', filename)
+        font_label = self.get_font(18, bold=True)
+        font_value = self.get_font(20)
+        
+        for i, (label, value) in enumerate(specs[:4]):
+            col = i % 2
+            row = i // 2
+            
+            x = 40 + col * (col_width + 40)
+            y = y_start + row * 90
+            
+            # Glass панель
+            panel_width = col_width
+            panel_height = 70
+            
+            self.draw_rounded_rectangle(
+                draw,
+                [x, y, x + panel_width, y + panel_height],
+                radius=15,
+                fill=(255, 255, 255, 35)
+            )
+            
+            # Текст
+            draw.text((x + 15, y + 10), label, fill=self.STEAM_BLUE, font=font_label)
+            draw.text((x + 15, y + 35), value, fill=self.STEAM_LIGHT, font=font_value)
+    
+    def _draw_price_panel(self, draw):
+        """
+        Рисует цену в glass контейнере
+        """
+        price_text = self.format_price(self.build.price)
+        font = self.get_font(64, bold=True)
+        
+        bbox = draw.textbbox((0, 0), price_text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        
+        # Центрируем внизу
+        x = (self.width - text_width) // 2
+        y = 1090
+        
+        # Glass подложка
+        padding = 25
+        self.draw_rounded_rectangle(
+            draw,
+            [x - padding, y - padding, 
+             x + text_width + padding, y + text_height + padding + 20],
+            radius=20,
+            fill=(102, 192, 244, 80),
+            outline=self.STEAM_BLUE,
+            width=3
+        )
+        
+        # Текст цены
+        draw.text((x, y), price_text, fill=(255, 255, 255), font=font)
+    
+    def _draw_bonuses(self, draw):
+        """
+        Рисует бонусы
+        """
+        font = self.get_font(16, bold=True)
+        
+        bonuses_lines = self.build.bonuses.split('\n')[:2]
+        y_start = 1020
+        
+        for i, line in enumerate(bonuses_lines):
+            y = y_start + i * 25
+            x = 40
+            
+            # Небольшая glass подложка
+            bbox = draw.textbbox((x, y), f"✨ {line}", font=font)
+            padding = 10
+            
+            self.draw_rounded_rectangle(
+                draw,
+                [bbox[0] - padding, bbox[1] - padding,
+                 bbox[2] + padding, bbox[3] + padding],
+                radius=8,
+                fill=(255, 215, 0, 40)
+            )
+            
+            draw.text((x, y), f"✨ {line}", fill=(255, 215, 0), font=font)

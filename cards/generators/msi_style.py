@@ -1,174 +1,188 @@
-from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
-import os
-from django.conf import settings
-from .card_generator import CardGenerator
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
+from .base_generator import BaseCardGenerator
 
 
-class MSIStyleGenerator:
+class MSIStyleGenerator(BaseCardGenerator):
     """
-    🔴 MSI Gaming Style Generator
-    Агрессивный красно-черный дизайн с RGB-подсветкой
+    🔴 MSI Gaming Style - агрессивный красно-черный дизайн
     """
     
-    # Цветовая палитра MSI
-    COLOR_BLACK = (13, 13, 13)
-    COLOR_RED = (227, 6, 19)
-    COLOR_DARK_RED = (140, 0, 0)
-    COLOR_WHITE = (255, 255, 255)
-    COLOR_GRAY = (180, 180, 180)
-    
-    def __init__(self, pc_build):
-        self.pc_build = pc_build
-        self.canvas_size = (1200, 1200)
+    # MSI фирменные цвета
+    MSI_RED = (227, 6, 19)
+    MSI_BLACK = (13, 13, 13)
+    MSI_DARK_GRAY = (30, 30, 30)
+    MSI_LIGHT_GRAY = (200, 200, 200)
     
     def generate(self):
         """
-        Генерирует карточку в MSI стиле
+        Генерирует карточку в стиле MSI Gaming
         """
-        # Создаем холст
-        img = Image.new('RGB', self.canvas_size, color=self.COLOR_BLACK)
-        draw = ImageDraw.Draw(img)
-        
-        # Загружаем и обрабатываем фото ПК
-        pc_photo = Image.open(self.pc_build.photo.path)
-        pc_photo = self._prepare_photo(pc_photo)
-        
-        # Размещаем фото в верхней части
-        img.paste(pc_photo, (0, 0))
-        
-        # Добавляем градиентный overlay
-        self._add_gradient_overlay(img)
+        # Создаем базовый черный фон
+        card = Image.new('RGB', self.CARD_SIZE, self.MSI_BLACK)
         
         # Добавляем диагональные линии
-        self._add_diagonal_lines(img)
+        card = self._add_diagonal_lines(card)
         
-        # Добавляем лого ПАРТМАРТ
-        draw = ImageDraw.Draw(img)
-        self._add_logo(draw)
+        # Загружаем и размещаем фото ПК
+        photo = self.load_and_prepare_photo((1200, 720))
         
-        # Добавляем характеристики
-        self._add_specs(draw)
+        # Затемняем низ фото для плавного перехода
+        photo = self._add_gradient_overlay(photo)
         
-        # Добавляем цену
-        self._add_price(draw)
+        # Размещаем фото в верхней части
+        card.paste(photo, (0, 0))
         
-        # Добавляем бонусы
-        if self.pc_build.bonuses:
-            self._add_bonuses(draw)
+        # Рисуем элементы интерфейса
+        draw = ImageDraw.Draw(card)
         
-        # Сохраняем
-        return self._save_image(img)
-    
-    def _prepare_photo(self, photo):
-        """Подготавливает фото ПК"""
-        # Обрезаем и масштабируем
-        target_width = 1200
-        target_height = 700
+        # Логотип ПАРТМАРТ в углу
+        self._draw_logo(draw)
         
-        # Сохраняем пропорции
-        aspect = photo.width / photo.height
-        if aspect > target_width / target_height:
-            new_height = target_height
-            new_width = int(new_height * aspect)
-        else:
-            new_width = target_width
-            new_height = int(new_width / aspect)
+        # RGB accent линия
+        self._draw_rgb_accent(draw)
         
-        photo = photo.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        # Карточки характеристик
+        self._draw_specs_panel(draw)
         
-        # Центрируем
-        left = (new_width - target_width) // 2
-        top = (new_height - target_height) // 2
-        photo = photo.crop((left, top, left + target_width, top + target_height))
+        # Цена - самый заметный элемент
+        self._draw_price(draw)
         
-        # Приглушаем яркость
-        enhancer = ImageEnhance.Brightness(photo)
-        photo = enhancer.enhance(0.7)
+        # Бонусы если есть
+        if self.build.bonuses:
+            self._draw_bonuses(draw)
         
-        return photo
-    
-    def _add_gradient_overlay(self, img):
-        """Добавляет градиентный overlay"""
-        overlay = Image.new('RGBA', self.canvas_size, (0, 0, 0, 0))
-        draw = ImageDraw.Draw(overlay)
-        
-        # Градиент снизу вверх
-        for i in range(700, 1200):
-            alpha = int((i - 700) / 500 * 200)
-            draw.rectangle([(0, i), (1200, i + 1)], fill=(13, 13, 13, alpha))
-        
-        img.paste(overlay, (0, 0), overlay)
+        return card
     
     def _add_diagonal_lines(self, img):
-        """Добавляет диагональные линии MSI-стиля"""
-        overlay = Image.new('RGBA', self.canvas_size, (0, 0, 0, 0))
+        """
+        Добавляет диагональные линии в стиле MSI
+        """
+        draw = ImageDraw.Draw(img, 'RGBA')
+        
+        # Рисуем несколько диагональных полос
+        for i in range(0, self.width + self.height, 100):
+            # Полупрозрачные красные линии
+            points = [
+                (i, 0),
+                (i + 50, 0),
+                (0, i + 50),
+                (0, i)
+            ]
+            if i < self.width:
+                draw.polygon(points, fill=(227, 6, 19, 10))
+        
+        return img
+    
+    def _add_gradient_overlay(self, photo):
+        """
+        Добавляет градиентное затемнение снизу
+        """
+        overlay = Image.new('RGBA', photo.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(overlay)
         
-        # Диагональные линии
-        for i in range(0, 1400, 100):
-            draw.line([(i, 0), (i - 400, 400)], fill=(227, 6, 19, 30), width=3)
+        # Градиент от прозрачного к черному
+        for y in range(photo.height // 2, photo.height):
+            alpha = int(255 * (y - photo.height // 2) / (photo.height // 2))
+            draw.line([(0, y), (photo.width, y)], fill=(0, 0, 0, alpha))
         
-        img.paste(overlay, (0, 0), overlay)
+        photo = photo.convert('RGBA')
+        return Image.alpha_composite(photo, overlay).convert('RGB')
     
-    def _add_logo(self, draw):
-        """Добавляет лого ПАРТМАРТ"""
-        font = CardGenerator.get_font(48, bold=True)
-        text = "PARTMART"
+    def _draw_logo(self, draw):
+        """
+        Рисует логотип ПАРТМАРТ
+        """
+        font = self.get_font(48, bold=True)
+        text = "ПАРТМАРТ"
+        
+        # Позиция в правом верхнем углу
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = bbox[2] - bbox[0]
+        x = self.width - text_width - 40
+        y = 30
         
         # Тень
-        draw.text((52, 32), text, font=font, fill=(0, 0, 0, 180))
-        # Основной текст
-        draw.text((50, 30), text, font=font, fill=self.COLOR_RED)
+        draw.text((x + 3, y + 3), text, fill=(0, 0, 0), font=font)
+        # Основной текст красным
+        draw.text((x, y), text, fill=self.MSI_RED, font=font)
     
-    def _add_specs(self, draw):
-        """Добавляет характеристики"""
-        specs = self.pc_build.get_specs_list()
-        y_offset = 720
+    def _draw_rgb_accent(self, draw):
+        """
+        Рисует RGB accent линию
+        """
+        y_pos = 740
+        gradient_colors = [
+            (255, 0, 0),    # Red
+            (255, 127, 0),  # Orange  
+            (255, 255, 0),  # Yellow
+            (0, 255, 0),    # Green
+            (0, 0, 255),    # Blue
+            (139, 0, 255),  # Purple
+        ]
         
-        font_label = CardGenerator.get_font(18, bold=True)
-        font_value = CardGenerator.get_font(22, bold=False)
+        segment_width = self.width // len(gradient_colors)
         
-        for label, value in specs:
-            # Лейбл
-            draw.text((50, y_offset), label, font=font_label, fill=self.COLOR_RED)
-            # Значение
-            draw.text((50, y_offset + 25), value, font=font_value, fill=self.COLOR_WHITE)
+        for i, color in enumerate(gradient_colors):
+            x1 = i * segment_width
+            x2 = (i + 1) * segment_width
+            draw.rectangle([x1, y_pos, x2, y_pos + 4], fill=color)
+    
+    def _draw_specs_panel(self, draw):
+        """
+        Рисует панель с характеристиками
+        """
+        y_start = 770
+        x_margin = 40
+        
+        specs = self.build.get_specs_list()
+        font_label = self.get_font(20, bold=True)
+        font_value = self.get_font(22)
+        
+        for i, (label, value) in enumerate(specs[:4]):  # Показываем только 4 основные
+            y_pos = y_start + i * 60
             
-            y_offset += 65
+            # Рисуем иконку/label
+            draw.text((x_margin, y_pos), label, fill=self.MSI_RED, font=font_label)
+            
+            # Значение
+            draw.text((x_margin + 200, y_pos), value, fill=self.MSI_LIGHT_GRAY, font=font_value)
     
-    def _add_price(self, draw):
-        """Добавляет цену"""
-        price_font = CardGenerator.get_font(72, bold=True)
-        price_text = f"{int(self.pc_build.price):,}".replace(',', ' ') + " ₽"
+    def _draw_price(self, draw):
+        """
+        Рисует цену - самый заметный элемент
+        """
+        price_text = self.format_price(self.build.price)
+        font = self.get_font(72, bold=True)
         
-        # Позиция справа снизу
-        bbox = draw.textbbox((0, 0), price_text, font=price_font)
+        # Позиция в правом нижнем углу
+        bbox = draw.textbbox((0, 0), price_text, font=font)
         text_width = bbox[2] - bbox[0]
         
-        x = 1200 - text_width - 50
-        y = 1100
+        x = self.width - text_width - 40
+        y = self.height - 120
         
-        # Тень
-        draw.text((x + 3, y + 3), price_text, font=price_font, fill=(0, 0, 0, 200))
-        # Основной текст
-        draw.text((x, y), price_text, font=price_font, fill=self.COLOR_RED)
+        # Подложка
+        padding = 20
+        self.draw_rounded_rectangle(
+            draw,
+            [x - padding, y - padding, x + text_width + padding, y + 80 + padding],
+            radius=15,
+            fill=(227, 6, 19, 255)
+        )
+        
+        # Текст цены белым
+        draw.text((x, y), price_text, fill=(255, 255, 255), font=font)
     
-    def _add_bonuses(self, draw):
-        """Добавляет бонусы"""
-        font = CardGenerator.get_font(16, bold=False)
-        lines = self.pc_build.bonuses.split('\n')[:2]  # Максимум 2 строки
+    def _draw_bonuses(self, draw):
+        """
+        Рисует бонусы
+        """
+        font = self.get_font(18, bold=True)
         
-        y = 1030
-        for line in lines:
-            draw.text((50, y), f"✨ {line.strip()}", font=font, fill=self.COLOR_GRAY)
-            y += 25
-    
-    def _save_image(self, img):
-        """Сохраняет изображение"""
-        filename = f"partmart_msi_{self.pc_build.pk}.png"
-        filepath = os.path.join(settings.MEDIA_ROOT, 'generated', filename)
+        bonuses_lines = self.build.bonuses.split('\n')[:2]  # Максимум 2 строки
+        y_start = self.height - 200
         
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        img.save(filepath, 'PNG', quality=95, optimize=True)
-        
-        return os.path.join('generated', filename)
+        for i, line in enumerate(bonuses_lines):
+            y = y_start + i * 30
+            # Рисуем с иконкой подарка
+            draw.text((40, y), f"🎁 {line}", fill=(255, 215, 0), font=font)
