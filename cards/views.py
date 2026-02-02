@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import HttpResponse, FileResponse, JsonResponse
 from .models import PCBuild, GeneratedCard
+from .forms import PCBuildForm
 from .generators import (
     MSIStyleGenerator,
     SteamStyleGenerator,
@@ -13,6 +14,7 @@ from PIL import Image
 import zipfile
 import io
 import os
+import json
 from django.conf import settings
 
 
@@ -50,128 +52,111 @@ def mixpc_gallery(request):
 def create_card(request):
     """Создание новой карточки"""
     if request.method == 'POST':
-        # Получаем данные из формы
-        name = request.POST.get('name', 'Gaming PC')
-        cpu = request.POST.get('cpu', 'AMD Ryzen 5 7500F')
-        gpu = request.POST.get('gpu', 'RTX 5060 Ti 16GB')
-        ram = request.POST.get('ram', 'DDR5 32GB (2x16GB)')
-        storage = request.POST.get('storage', 'SSD M.2 1TB NVMe')
-        motherboard = request.POST.get('motherboard', 'B650')
-        psu = request.POST.get('psu', '750W')
-        case = request.POST.get('case', 'ATX Tower')
-        price = request.POST.get('price', '0')
-        warranty = request.POST.get('warranty', '36')
+        form = PCBuildForm(request.POST, request.FILES)
         
-        # Стиль
-        style = request.POST.get('style', 'msi')
-        
-        # Фото
-        photo = request.FILES.get('photo')
-        
-        try:
-            # Создаём PCBuild
-            build = PCBuild.objects.create(
-                name=name,
-                cpu=cpu,
-                gpu=gpu,
-                ram=ram,
-                storage=storage,
-                motherboard=motherboard,
-                psu=psu,
-                case=case,
-                price=float(price) if price else 0,
-                warranty_months=int(warranty) if warranty else 36
-            )
-            
-            # Сохраняем фото если есть
-            if photo:
-                build.photo = photo
-                build.save()
-            
-            # Генерируем карточку
-            generator_map = {
-                'msi': MSIStyleGenerator,
-                'steam': SteamStyleGenerator,
-                'apple': AppleStyleGenerator,
-                'spotify': SpotifyStyleGenerator,
-                'mixpc': MIXPCSeriesGenerator,
-            }
-            
-            generator_class = generator_map.get(style, MSIStyleGenerator)
-            generator = generator_class(build)
-            
-            # Генерация серии или одной карточки
-            if style == 'mixpc':
-                cards = generator.generate_series()
+        if form.is_valid():
+            try:
+                # Создаём PCBuild
+                build = form.save()
                 
-                # Сохраняем все карточки
-                generated_cards = []
-                for i, card_image in enumerate(cards, 1):
-                    # Сохраняем во временный файл
-                    temp_path = os.path.join(settings.MEDIA_ROOT, 'generated', f'{build.id}_card_{i}.png')
+                # Стиль
+                style = request.POST.get('style', 'msi')
+                
+                # Генерируем карточку
+                generator_map = {
+                    'msi': MSIStyleGenerator,
+                    'steam': SteamStyleGenerator,
+                    'apple': AppleStyleGenerator,
+                    'spotify': SpotifyStyleGenerator,
+                    'mixpc': MIXPCSeriesGenerator,
+                }
+                
+                generator_class = generator_map.get(style, MSIStyleGenerator)
+                generator = generator_class(build)
+                
+                # Генерация серии или одной карточки
+                if style == 'mixpc':
+                    cards = generator.generate_series()
+                    
+                    # Сохраняем все карточки
+                    generated_cards = []
+                    for i, card_image in enumerate(cards, 1):
+                        # Сохраняем во временный файл
+                        temp_path = os.path.join(settings.MEDIA_ROOT, 'generated', f'{build.id}_card_{i}.png')
+                        os.makedirs(os.path.dirname(temp_path), exist_ok=True)
+                        card_image.save(temp_path, 'PNG')
+                        
+                        # Создаём запись в БД
+                        card = GeneratedCard.objects.create(
+                            build=build,
+                            style=style,
+                            card_number=i
+                        )
+                        card.image.name = f'generated/{build.id}_card_{i}.png'
+                        card.save()
+                        generated_cards.append(card)
+                    
+                    messages.success(request, f'✅ Серия из {len(cards)} карточек успешно создана!')
+                    return redirect('cards:mixpc_result', build_id=build.id)
+                else:
+                    # Одна карточка
+                    card_image = generator.generate()
+                    
+                    # Сохраняем
+                    temp_path = os.path.join(settings.MEDIA_ROOT, 'generated', f'{build.id}_card.png')
                     os.makedirs(os.path.dirname(temp_path), exist_ok=True)
                     card_image.save(temp_path, 'PNG')
                     
-                    # Создаём запись в БД
                     card = GeneratedCard.objects.create(
                         build=build,
-                        style=style,
-                        card_number=i
+                        style=style
                     )
-                    card.image.name = f'generated/{build.id}_card_{i}.png'
+                    card.image.name = f'generated/{build.id}_card.png'
                     card.save()
-                    generated_cards.append(card)
-                
-                messages.success(request, f'✅ Серия из {len(cards)} карточек успешно создана!')
-                return redirect('cards:mixpc_result', build_id=build.id)
-            else:
-                # Одна карточка
-                card_image = generator.generate()
-                
-                # Сохраняем
-                temp_path = os.path.join(settings.MEDIA_ROOT, 'generated', f'{build.id}_card.png')
-                os.makedirs(os.path.dirname(temp_path), exist_ok=True)
-                card_image.save(temp_path, 'PNG')
-                
-                card = GeneratedCard.objects.create(
-                    build=build,
-                    style=style
-                )
-                card.image.name = f'generated/{build.id}_card.png'
-                card.save()
-                
-                messages.success(request, '✅ Карточка успешно создана!')
-                return redirect('cards:card_detail', card_id=card.id)
-                
-        except Exception as e:
-            messages.error(request, f'❌ Ошибка при создании карточки: {str(e)}')
-            return redirect('cards:create')
+                    
+                    messages.success(request, '✅ Карточка успешно создана!')
+                    return redirect('cards:card_detail', card_id=card.id)
+                    
+            except Exception as e:
+                messages.error(request, f'❌ Ошибка при создании карточки: {str(e)}')
+                return redirect('cards:create')
+        else:
+            # Ошибки валидации
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+    else:
+        # GET запрос
+        form = PCBuildForm()
     
-    # GET запрос
+    # Пресеты
+    presets_data = [
+        {
+            'name': 'Бюджетный ПК',
+            'cpu': 'AMD Ryzen 5 7500F',
+            'gpu': 'RTX 4060 8GB',
+            'ram': 'DDR5 16GB',
+            'price': 45000,
+        },
+        {
+            'name': 'Игровой ПК',
+            'cpu': 'AMD Ryzen 7 7700X',
+            'gpu': 'RTX 4070 Super 12GB',
+            'ram': 'DDR5 32GB',
+            'price': 85000,
+        },
+        {
+            'name': 'Топовый ПК',
+            'cpu': 'AMD Ryzen 9 7950X',
+            'gpu': 'RTX 4090 24GB',
+            'ram': 'DDR5 64GB',
+            'price': 250000,
+        },
+    ]
+    
     context = {
-        'presets': [
-            {
-                'name': 'Бюджетный ПК',
-                'cpu': 'AMD Ryzen 5 7500F',
-                'gpu': 'RTX 4060 8GB',
-                'ram': 'DDR5 16GB',
-                'price': 45000,
-            },
-            {
-                'name': 'Игровой ПК',
-                'cpu': 'AMD Ryzen 7 7700X',
-                'gpu': 'RTX 4070 Super 12GB',
-                'ram': 'DDR5 32GB',
-                'price': 85000,
-            },
-            {
-                'name': 'Топовый ПК',
-                'cpu': 'AMD Ryzen 9 7950X',
-                'gpu': 'RTX 4090 24GB',
-                'ram': 'DDR5 64GB',
-                'price': 250000,
-            },
-        ]
+        'form': form,
+        'presets': json.dumps(presets_data),
     }
     return render(request, 'cards/create.html', context)
 
