@@ -1,69 +1,70 @@
 from django import forms
-from .models import PCBuild, Preset
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, Submit, Div, HTML
+from .models import PCBuild
 
 
 class PCBuildForm(forms.ModelForm):
-    """
-    Форма для создания/редактирования сборки ПК
-    """
+    """Форма для создания конфигурации ПК"""
     
     class Meta:
         model = PCBuild
         fields = [
-            'photo', 'cpu', 'gpu', 'ram', 'storage',
-            'motherboard', 'psu', 'case', 'price', 'bonuses', 'style'
+            'name', 'photo',
+            'cpu', 'gpu', 'ram', 'storage',
+            'motherboard', 'psu', 'case', 'cooling',
+            'price', 'warranty_months'
         ]
+        
         widgets = {
-            'photo': forms.FileInput(attrs={
-                'class': 'form-control',
-                'accept': 'image/*'
+            'name': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all',
+                'placeholder': 'Игровой ПК'
             }),
             'cpu': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Intel Core i5-12400F / AMD Ryzen 5 5600X'
+                'class': 'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all',
+                'placeholder': 'AMD Ryzen 5 7500F'
             }),
             'gpu': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'NVIDIA RTX 3060 Ti 8GB / AMD RX 6700 XT'
+                'class': 'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all',
+                'placeholder': 'RTX 5060 Ti 16GB GDDR7'
             }),
             'ram': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': '16GB DDR4 3200MHz'
+                'class': 'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all',
+                'placeholder': 'DDR5 32GB (2x16GB)'
             }),
             'storage': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': '512GB NVMe SSD + 1TB HDD'
+                'class': 'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all',
+                'placeholder': 'SSD M.2 1TB NVMe'
             }),
             'motherboard': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'ASUS B660M-PLUS'
+                'class': 'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all',
+                'placeholder': 'B650'
             }),
             'psu': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': '650W 80+ Bronze'
+                'class': 'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all',
+                'placeholder': '750W'
             }),
             'case': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'DeepCool MATREXX 55'
+                'class': 'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all',
+                'placeholder': 'ATX Tower'
+            }),
+            'cooling': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all',
+                'placeholder': 'Tower Cooler'
             }),
             'price': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': '45000'
+                'class': 'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all',
+                'placeholder': '85000',
+                'step': '0.01'
             }),
-            'bonuses': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Windows 11 + Office в подарок!\nГарантия 1 год'
+            'warranty_months': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all',
+                'placeholder': '36',
+                'min': '1',
+                'max': '60'
             }),
-            'style': forms.RadioSelect(attrs={
-                'class': 'form-check-input'
-            })
+            'photo': forms.FileInput(attrs={
+                'class': 'hidden',
+                'accept': 'image/*',
+                'id': 'photo-upload'
+            }),
         }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.form_class = 'glass-panel'

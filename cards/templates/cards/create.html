@@ -1,212 +1,277 @@
-{% extends 'cards/base.html' %}
+{% extends 'cards/base_steam.html' %}
 
 {% block title %}Создать карточку | ПАРТМАРТ{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <!-- Header -->
-    <div class="glass-panel rounded-3xl p-8 mb-8 text-center">
-        <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+<!-- Header -->
+<div class="glass-card rounded-3xl p-8 mb-12 text-center">
+    <h1 class="text-5xl font-bold mb-4">
+        <span class="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
             Создать карточку
-        </h1>
-        <p class="text-gray-300">Заполните характеристики ПК и выберите стиль оформления</p>
-    </div>
-    
-    <!-- Presets Quick Select -->
-    {% if presets %}
-    <div class="glass-dark rounded-2xl p-6 mb-8">
-        <h3 class="text-xl font-bold mb-4">⚡ Быстрые пресеты</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {% for preset in presets %}
-            <button onclick="loadPreset('{{ preset.pk }}')"
-                    class="glass-light rounded-xl p-3 hover:bg-blue-500/20 text-sm">
-                {{ preset.name }}
-            </button>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-    
-    <!-- Form -->
-    <form method="post" enctype="multipart/form-data" class="space-y-6">
-        {% csrf_token %}
-        
-        <!-- Photo Upload -->
-        <div class="glass-panel rounded-2xl p-8">
-            <h3 class="text-2xl font-bold mb-4">📸 Фото компьютера</h3>
-            <div id="drop-zone" class="glass-dark rounded-xl p-12 text-center border-2 border-dashed border-gray-600 hover:border-blue-400 cursor-pointer">
-                <div class="text-6xl mb-4">📁</div>
-                <p class="text-xl mb-2">Перетащите фото сюда</p>
-                <p class="text-gray-400 mb-4">или</p>
-                {{ form.photo }}
-                <label for="id_photo" class="steam-btn px-6 py-3 rounded-xl cursor-pointer inline-block">
-                    Выбрать файл
-                </label>
-            </div>
-            <div id="preview" class="mt-4"></div>
-        </div>
-        
-        <!-- Main Specs -->
-        <div class="glass-panel rounded-2xl p-8">
-            <h3 class="text-2xl font-bold mb-6">⚙️ Основные характеристики</h3>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-bold mb-2 text-gray-300">🖥 Процессор</label>
-                    {{ form.cpu }}
-                </div>
-                <div>
-                    <label class="block text-sm font-bold mb-2 text-gray-300">🎮 Видеокарта</label>
-                    {{ form.gpu }}
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold mb-2 text-gray-300">🧠 Оперативная память</label>
-                        {{ form.ram }}
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold mb-2 text-gray-300">💾 Накопитель</label>
-                        {{ form.storage }}
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Additional Components -->
-        <div class="glass-panel rounded-2xl p-8">
-            <h3 class="text-2xl font-bold mb-6">🔧 Дополнительные компоненты</h3>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-bold mb-2 text-gray-300">🔌 Материнская плата</label>
-                    {{ form.motherboard }}
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold mb-2 text-gray-300">⚡ Блок питания</label>
-                        {{ form.psu }}
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold mb-2 text-gray-300">📦 Корпус</label>
-                        {{ form.case }}
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Price & Bonuses -->
-        <div class="glass-panel rounded-2xl p-8">
-            <h3 class="text-2xl font-bold mb-6">💰 Цена и бонусы</h3>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-bold mb-2 text-gray-300">💵 Цена (₽)</label>
-                    {{ form.price }}
-                </div>
-                <div>
-                    <label class="block text-sm font-bold mb-2 text-gray-300">🎁 Бонусы</label>
-                    {{ form.bonuses }}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Style Selection -->
-        <div class="glass-panel rounded-2xl p-8">
-            <h3 class="text-2xl font-bold mb-6">🎨 Выберите стиль карточки</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {% for value, label in form.style.field.choices %}
-                <label class="glass-light rounded-xl p-6 cursor-pointer hover:bg-blue-500/20 flex items-center space-x-4">
-                    <input type="radio" name="style" value="{{ value }}" 
-                           {% if form.style.value == value or forloop.first and not form.style.value %}checked{% endif %}
-                           class="w-5 h-5">
-                    <div>
-                        <div class="text-2xl mb-1">{{ label }}</div>
-                        <div class="text-sm text-gray-400">
-                            {% if value == 'msi' %}Агрессивный gaming дизайн
-                            {% elif value == 'steam' %}Glass morphism эффекты
-                            {% elif value == 'apple' %}Минималистичный premium
-                            {% elif value == 'spotify' %}Ультра-чистый стиль
-                            {% endif %}
-                        </div>
-                    </div>
-                </label>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <!-- Submit -->
-        <div class="flex space-x-4">
-            <button type="submit" class="spotify-btn flex-1 py-5 rounded-xl font-bold text-xl">
-                🚀 Создать карточку
-            </button>
-            <a href="{% url 'cards:index' %}" class="glass-light px-8 py-5 rounded-xl font-bold text-xl text-center">
-                Отмена
-            </a>
-        </div>
-    </form>
+        </span>
+    </h1>
+    <p class="text-xl text-gray-300">
+        Загрузите фото ПК и укажите характеристики
+    </p>
 </div>
 
-<style>
-    input[type="text"],
-    input[type="number"],
-    textarea {
-        width: 100%;
-        padding: 12px 16px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        color: white;
-        font-size: 16px;
-    }
+<!-- Main Form -->
+<form method="post" enctype="multipart/form-data" class="max-w-4xl mx-auto">
+    {% csrf_token %}
     
-    input[type="text"]:focus,
-    input[type="number"]:focus,
-    textarea:focus {
-        outline: none;
-        border-color: rgba(59, 130, 246, 0.5);
-        background: rgba(255, 255, 255, 0.08);
-    }
-    
-    input[type="file"] {
-        display: none;
-    }
-</style>
-
-<script>
-    // Drag & Drop
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('id_photo');
-    const preview = document.getElementById('preview');
-    
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.style.borderColor = '#3b82f6';
-    });
-    
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.style.borderColor = '#4b5563';
-    });
-    
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.style.borderColor = '#4b5563';
+    <!-- Photo Upload Section -->
+    <div class="glass-card rounded-2xl p-8 mb-8">
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <i class="fas fa-camera mr-3 text-purple-400"></i>
+            Фото компьютера
+        </h2>
         
-        const files = e.dataTransfer.files;
-        if (files.length) {
-            fileInput.files = files;
-            showPreview(files[0]);
-        }
-    });
+        <div class="relative">
+            <!-- Preview Area -->
+            <div id="photo-preview-container" class="mb-4 hidden">
+                <img id="photo-preview" class="w-full h-96 object-cover rounded-xl" alt="Preview">
+                <button type="button" onclick="clearPhoto()" class="absolute top-4 right-4 bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-times mr-2"></i>Удалить
+                </button>
+            </div>
+            
+            <!-- Upload Button -->
+            <label for="photo-upload" id="upload-label" class="block cursor-pointer">
+                <div class="glass-panel rounded-xl p-12 text-center border-2 border-dashed border-purple-500/50 hover:border-purple-500 transition-all">
+                    <i class="fas fa-cloud-upload-alt text-6xl text-purple-400 mb-4"></i>
+                    <p class="text-xl font-semibold mb-2">Нажмите для загрузки фото</p>
+                    <p class="text-gray-400">PNG, JPG до 10MB</p>
+                </div>
+            </label>
+            
+            {{ form.photo }}
+        </div>
+    </div>
     
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length) {
-            showPreview(e.target.files[0]);
-        }
-    });
+    <!-- Style Selection -->
+    <div class="glass-card rounded-2xl p-8 mb-8">
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <i class="fas fa-palette mr-3 text-pink-400"></i>
+            Выберите стиль
+        </h2>
+        
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <label class="cursor-pointer">
+                <input type="radio" name="style" value="msi" checked class="hidden peer">
+                <div class="glass-panel rounded-xl p-4 text-center border-2 border-transparent peer-checked:border-red-500 peer-checked:bg-red-500/10 transition-all">
+                    <div class="text-4xl mb-2">🔴</div>
+                    <p class="font-semibold">MSI Gaming</p>
+                </div>
+            </label>
+            
+            <label class="cursor-pointer">
+                <input type="radio" name="style" value="steam" class="hidden peer">
+                <div class="glass-panel rounded-xl p-4 text-center border-2 border-transparent peer-checked:border-blue-500 peer-checked:bg-blue-500/10 transition-all">
+                    <div class="text-4xl mb-2">🎮</div>
+                    <p class="font-semibold">Steam</p>
+                </div>
+            </label>
+            
+            <label class="cursor-pointer">
+                <input type="radio" name="style" value="apple" class="hidden peer">
+                <div class="glass-panel rounded-xl p-4 text-center border-2 border-transparent peer-checked:border-gray-400 peer-checked:bg-gray-400/10 transition-all">
+                    <div class="text-4xl mb-2">🍎</div>
+                    <p class="font-semibold">Apple</p>
+                </div>
+            </label>
+            
+            <label class="cursor-pointer">
+                <input type="radio" name="style" value="spotify" class="hidden peer">
+                <div class="glass-panel rounded-xl p-4 text-center border-2 border-transparent peer-checked:border-green-500 peer-checked:bg-green-500/10 transition-all">
+                    <div class="text-4xl mb-2">🎵</div>
+                    <p class="font-semibold">Spotify</p>
+                </div>
+            </label>
+            
+            <label class="cursor-pointer">
+                <input type="radio" name="style" value="mixpc" class="hidden peer">
+                <div class="glass-panel rounded-xl p-4 text-center border-2 border-transparent peer-checked:border-purple-500 peer-checked:bg-purple-500/10 transition-all">
+                    <div class="text-4xl mb-2">💜</div>
+                    <p class="font-semibold text-sm">MIXPC<br>Series</p>
+                </div>
+            </label>
+        </div>
+    </div>
     
-    function showPreview(file) {
+    <!-- Basic Info -->
+    <div class="glass-card rounded-2xl p-8 mb-8">
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <i class="fas fa-info-circle mr-3 text-purple-400"></i>
+            Основная информация
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-300">Название</label>
+                {{ form.name }}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-300">Цена (₽)</label>
+                {{ form.price }}
+            </div>
+            
+            <div class="md:col-span-2">
+                <label class="block text-sm font-semibold mb-2 text-gray-300">Гарантия (месяцы)</label>
+                {{ form.warranty_months }}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Components -->
+    <div class="glass-card rounded-2xl p-8 mb-8">
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <i class="fas fa-microchip mr-3 text-pink-400"></i>
+            Комплектующие
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-300">
+                    <i class="fas fa-microchip mr-2 text-purple-400"></i>Процессор
+                </label>
+                {{ form.cpu }}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-300">
+                    <i class="fas fa-gamepad mr-2 text-pink-400"></i>Видеокарта
+                </label>
+                {{ form.gpu }}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-300">
+                    <i class="fas fa-memory mr-2 text-purple-400"></i>Оперативная память
+                </label>
+                {{ form.ram }}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-300">
+                    <i class="fas fa-hdd mr-2 text-pink-400"></i>Накопитель
+                </label>
+                {{ form.storage }}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-300">
+                    <i class="fas fa-sitemap mr-2 text-purple-400"></i>Материнская плата
+                </label>
+                {{ form.motherboard }}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-300">
+                    <i class="fas fa-bolt mr-2 text-pink-400"></i>Блок питания
+                </label>
+                {{ form.psu }}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-300">
+                    <i class="fas fa-box mr-2 text-purple-400"></i>Корпус (опционально)
+                </label>
+                {{ form.case }}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-300">
+                    <i class="fas fa-snowflake mr-2 text-pink-400"></i>Охлаждение (опционально)
+                </label>
+                {{ form.cooling }}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Submit Button -->
+    <div class="flex justify-center space-x-6">
+        <button type="submit" class="steam-btn px-12 py-5 rounded-xl text-white font-bold text-xl pulse-glow">
+            <i class="fas fa-magic mr-2"></i>Сгенерировать карточку
+        </button>
+        <a href="{% url 'cards:index' %}" class="glass-card px-12 py-5 rounded-xl text-white font-bold text-xl border-2 border-white/30 hover:border-red-400">
+            <i class="fas fa-times mr-2"></i>Отмена
+        </a>
+    </div>
+</form>
+
+<!-- Presets Quick Access -->
+{% if presets %}
+<div class="glass-panel rounded-3xl p-8 mt-12">
+    <h2 class="text-3xl font-bold mb-6 text-center">
+        <i class="fas fa-bolt mr-3 text-yellow-400"></i>
+        Быстрые пресеты
+    </h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for preset in presets %}
+        <div class="glass-card rounded-xl p-6 cursor-pointer hover:scale-105 transition-transform" onclick="fillPreset({{ forloop.counter0 }})">
+            <h3 class="text-xl font-bold mb-3 text-purple-300">{{ preset.name }}</h3>
+            <div class="text-sm text-gray-400 space-y-1">
+                <p><i class="fas fa-microchip mr-2"></i>{{ preset.cpu }}</p>
+                <p><i class="fas fa-gamepad mr-2"></i>{{ preset.gpu }}</p>
+                <p><i class="fas fa-memory mr-2"></i>{{ preset.ram }}</p>
+                <p class="text-green-400 font-bold mt-3">
+                    <i class="fas fa-ruble-sign mr-2"></i>{{ preset.price|floatformat:0 }} ₽
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Photo preview
+const photoInput = document.getElementById('photo-upload');
+const photoPreview = document.getElementById('photo-preview');
+const photoPreviewContainer = document.getElementById('photo-preview-container');
+const uploadLabel = document.getElementById('upload-label');
+
+photoInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
         const reader = new FileReader();
-        reader.onload = (e) => {
-            preview.innerHTML = `<img src="${e.target.result}" class="rounded-xl max-h-64 mx-auto">`;
+        reader.onload = function(e) {
+            photoPreview.src = e.target.result;
+            photoPreviewContainer.classList.remove('hidden');
+            uploadLabel.classList.add('hidden');
         };
         reader.readAsDataURL(file);
     }
+});
+
+function clearPhoto() {
+    photoInput.value = '';
+    photoPreview.src = '';
+    photoPreviewContainer.classList.add('hidden');
+    uploadLabel.classList.remove('hidden');
+}
+
+// Presets data
+const presets = {{ presets|safe }};
+
+function fillPreset(index) {
+    const preset = presets[index];
+    if (!preset) return;
+    
+    // Fill form fields
+    document.querySelector('input[name="name"]').value = preset.name || '';
+    document.querySelector('input[name="cpu"]').value = preset.cpu || '';
+    document.querySelector('input[name="gpu"]').value = preset.gpu || '';
+    document.querySelector('input[name="ram"]').value = preset.ram || '';
+    document.querySelector('input[name="price"]').value = preset.price || 0;
+    
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 </script>
 {% endblock %}
