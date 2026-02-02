@@ -3,3 +3,6 @@ Pillow>=11.0.0
 django-crispy-forms>=2.3
 crispy-bootstrap5>=2.0.0
 python-decouple>=3.8
+
+# Steam UI Framework (через ZIP без Git)
+steam-ui-framework @ https://github.com/vitorpixel-6436/music-stream-app/archive/refs/heads/main.zip
